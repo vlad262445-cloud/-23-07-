@@ -91,22 +91,37 @@ export class LifecycleStepsField extends Component {
     }
 
     // Отзыв 2026-07-23: "должна быть возможность увидеть ориентировочную
-    // дату прибытия" - показывается подсказкой при наведении (плюс отдельная
-    // скрываемая колонка expected_arrival_date во вьюхе и в раскрывающемся
-    // блоке - см. views/purchase_registry_views.xml и registry_expand_data,
-    // три места на выбор, а не втискивать ещё один видимый элемент в и так
-    // плотный виджет).
-    get arrivalDate() {
+    // дату прибытия" - показывается подсказкой при наведении. Дальше
+    // выяснилось (тот же день, следующее сообщение), что на заказе уже
+    // есть НАТИВНОЕ поле date_planned ("Ожидаемое прибытие") - оно и есть
+    // основной источник, наше expected_arrival_date (с заявки, "желаемая
+    // дата") показывается ВТОРЫМ пунктом только если отличается - не
+    // дублируем, если заявитель и факт совпадают.
+    get plannedArrival() {
+        return this.props.record.data.date_planned;
+    }
+
+    get requestedArrival() {
         return this.props.record.data.expected_arrival_date;
     }
 
     get wrapperTitle() {
+        const parts = [];
         const stageLabel = this.steps[this.currentIndex] && this.steps[this.currentIndex][1];
-        if (!this.arrivalDate) {
-            return stageLabel;
+        if (stageLabel) {
+            parts.push(stageLabel);
         }
-        const dateLabel = `Ориентировочная дата прибытия: ${formatDate(this.arrivalDate)}`;
-        return stageLabel ? `${stageLabel}\n${dateLabel}` : dateLabel;
+        if (this.plannedArrival) {
+            parts.push(`Ожидаемое прибытие: ${formatDate(this.plannedArrival)}`);
+        }
+        // hasSame(..., 'day'), а не equals() - date_planned технически
+        // datetime (несёт время), expected_arrival_date - date; сравниваем
+        // по календарному дню, а не поминутно.
+        if (this.requestedArrival &&
+            (!this.plannedArrival || !this.requestedArrival.hasSame(this.plannedArrival, 'day'))) {
+            parts.push(`Желаемая дата (заявка): ${formatDate(this.requestedArrival)}`);
+        }
+        return parts.join("\n");
     }
 }
 
@@ -116,5 +131,6 @@ registry.category("fields").add("lifecycle_steps", {
     fieldDependencies: [
         { name: "pending_action_short", type: "selection" },
         { name: "expected_arrival_date", type: "date" },
+        { name: "date_planned", type: "datetime" },
     ],
 });

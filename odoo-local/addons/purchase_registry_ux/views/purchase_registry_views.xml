@@ -67,8 +67,24 @@
              ориентировочную дату прибытия" - подсказка при наведении на
              сегменты уже есть (lifecycle_steps_field.js), плюс отдельная
              скрываемая колонка здесь - для тех, кому нужно видеть/
-             сортировать/выгружать дату напрямую, а не наводить курсор. -->
-        <field name="expected_arrival_date" string="Ориент. дата прибытия" optional="hide"/>
+             сортировать/выгружать дату напрямую, а не наводить курсор.
+             Переименовано в "Желаемая дата (заявка)", чтобы не путать с
+             нативным date_planned ("Ожидаемое прибытие") ниже - это две
+             разные даты (что хотел заявитель / что реально запланировано
+             по заказу), обе имеют смысл рядом. -->
+        <field name="expected_arrival_date" string="Желаемая дата (заявка)" optional="hide"/>
+      </field>
+
+      <!-- Отзыв 2026-07-23: "в заказе есть Крайний срок и Ожидаемая дата
+           прибытия, сделай чтобы их можно было добавить в колонки" - это
+           нативные поля purchase.order (date_order/date_planned), уже
+           заполняются самим Odoo/purchase_stock - ничего вычислять не
+           нужно, только показать в реестре. widget="date" - чтобы не
+           показывать время, эти поля технически datetime, но по смыслу
+           это даты. -->
+      <field name="user_id" position="before">
+        <field name="date_order" string="Крайний срок" widget="date" optional="hide"/>
+        <field name="date_planned" string="Ожидаемое прибытие" widget="date" optional="hide"/>
       </field>
       <field name="approval_state" position="attributes">
         <attribute name="optional">hide</attribute>
