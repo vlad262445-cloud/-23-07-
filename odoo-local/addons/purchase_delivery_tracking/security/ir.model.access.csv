@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_purchase_delivery_method_all,purchase.delivery.method.all,model_purchase_delivery_method,base.group_user,1,0,0,0
+access_purchase_delivery_method_buyer,purchase.delivery.method.buyer,model_purchase_delivery_method,purchase.group_purchase_user,1,1,1,0
+access_purchase_delivery_method_chief_buyer,purchase.delivery.method.chief.buyer,model_purchase_delivery_method,purchase_pdf_import.group_chief_buyer,1,1,1,0
+access_purchase_delivery_method_manager,purchase.delivery.method.manager,model_purchase_delivery_method,purchase.group_purchase_manager,1,1,1,1
+access_purchase_delivery_tracking_wizard_buyer,purchase.delivery.tracking.wizard.buyer,model_purchase_delivery_tracking_wizard,purchase.group_purchase_user,1,1,1,1
+access_purchase_delivery_tracking_wizard_chief_buyer,purchase.delivery.tracking.wizard.chief.buyer,model_purchase_delivery_tracking_wizard,purchase_pdf_import.group_chief_buyer,1,1,1,0

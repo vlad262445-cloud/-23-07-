@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- noupdate="1" - список стартовый, не закрытый (см. п. 5.1 ТЗ): если
+       заказчик отредактирует/добавит способ после установки, апдейт модуля
+       не должен затирать его правку. -->
+  <data noupdate="1">
+    <record id="delivery_method_vendor" model="purchase.delivery.method">
+      <field name="name">Силами поставщика</field>
+      <field name="sequence">10</field>
+      <field name="has_tracking">False</field>
+    </record>
+    <record id="delivery_method_pickup" model="purchase.delivery.method">
+      <field name="name">Самовывоз</field>
+      <field name="sequence">20</field>
+      <field name="has_tracking">False</field>
+    </record>
+    <record id="delivery_method_yandex" model="purchase.delivery.method">
+      <field name="name">Яндекс Доставка</field>
+      <field name="sequence">30</field>
+    </record>
+    <record id="delivery_method_cdek" model="purchase.delivery.method">
+      <field name="name">СДЭК</field>
+      <field name="sequence">40</field>
+    </record>
+    <record id="delivery_method_dellin" model="purchase.delivery.method">
+      <field name="name">Деловые Линии</field>
+      <field name="sequence">50</field>
+    </record>
+    <record id="delivery_method_pek" model="purchase.delivery.method">
+      <field name="name">ПЭК</field>
+      <field name="sequence">60</field>
+    </record>
+    <record id="delivery_method_russian_post" model="purchase.delivery.method">
+      <field name="name">Почта России</field>
+      <field name="sequence">70</field>
+    </record>
+    <record id="delivery_method_other_carrier" model="purchase.delivery.method">
+      <field name="name">Транспортная компания (иное)</field>
+      <field name="sequence">80</field>
+    </record>
+    <record id="delivery_method_courier" model="purchase.delivery.method">
+      <field name="name">Курьер</field>
+      <field name="sequence">90</field>
+    </record>
+  </data>
+</odoo>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_purchase_request_form_inherit_delivery_tracking" model="ir.ui.view">
+    <field name="name">purchase.request.form.inherit.delivery.tracking</field>
+    <field name="model">purchase.request</field>
+    <field name="inherit_id" ref="purchase_pdf_import.view_purchase_request_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//button[@name='action_arrange_delivery']" position="attributes">
+        <attribute name="name">action_open_delivery_tracking_wizard</attribute>
+        <attribute name="confirm"></attribute>
+      </xpath>
+
+      <!-- Только просмотр - "заявителю важно видеть, как едет его товар, но
+           не менять это" (п. 5.3 ТЗ). Поля related без readonly=False, так
+           что readonly уже гарантирован моделью, а не только вьюхой. -->
+      <field name="purchase_order_id" position="after">
+        <field name="delivery_method_id" invisible="not purchase_order_id"/>
+        <field name="tracking_number"
+               invisible="not purchase_order_id or not delivery_method_id.has_tracking"/>
+        <field name="shipped_date" invisible="not purchase_order_id"/>
+      </field>
+    </field>
+  </record>
+</odoo>
