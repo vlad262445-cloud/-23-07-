@@ -14,7 +14,10 @@
     'assets': {
         'web.assets_backend': [
             'purchase_registry_ux/static/src/js/registry_list_renderer.js',
+            'purchase_registry_ux/static/src/js/lifecycle_steps_field.js',
             'purchase_registry_ux/static/src/xml/registry_list_renderer.xml',
+            'purchase_registry_ux/static/src/xml/lifecycle_steps_field.xml',
+            'purchase_registry_ux/static/src/scss/registry_ux.scss',
         ],
     },
     'installable': True,

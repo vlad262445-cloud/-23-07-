@@ -46,13 +46,23 @@
       <!-- Единая шкала жизненного цикла вместо четырёх статусных колонок
            (п. 2.3). state/approval_state/request_state/document_status
            остаются в модели и во вьюхе - только уходят в optional="hide"
-           (state уже был скрыт в базовом модуле). Удалять их нельзя. -->
+           (state уже был скрыт в базовом модуле). Удалять их нельзя.
+
+           Голый progressbar (0-100%) заменён на компактный "путь" -
+           отзыв пользователя 2026-07-23: проценты не различали закупки
+           на практике (почти все "Согласовано" показывали одинаковые
+           40%) и не несли той же читаемости, что цветной statusbar на
+           форме заявки. lifecycle_progress остаётся на модели (нужен для
+           будущих pivot/graph в модуле 6), просто больше не выводится сам
+           по себе отдельной колонкой в реестре. -->
       <field name="state" position="before">
-        <field name="lifecycle_progress" widget="progressbar" string="Шкала"/>
-        <field name="lifecycle_stage" widget="badge" string="Этап"
-               decoration-success="lifecycle_stage == 'completed'"
-               decoration-warning="lifecycle_stage in ('to_approve', 'prepaid', 'in_transit')"
-               decoration-danger="lifecycle_stage in ('declined', 'cancel')"/>
+        <field name="lifecycle_stage" widget="lifecycle_steps" string="Этап" nolabel="1"/>
+        <field name="lifecycle_stage" widget="badge" string="Этап (текстом)" optional="hide"
+               decoration-info="lifecycle_stage == 'draft'"
+               decoration-warning="lifecycle_stage in ('to_approve', 'approved', 'prepaid', 'in_transit')"
+               decoration-success="lifecycle_stage in ('in_stock', 'completed')"
+               decoration-danger="lifecycle_stage == 'declined'"
+               decoration-muted="lifecycle_stage == 'cancel'"/>
       </field>
       <field name="approval_state" position="attributes">
         <attribute name="optional">hide</attribute>
@@ -69,7 +79,11 @@
            optional="hide" - используется в других местах, не трогаем сам
            метод его вычисления. -->
       <field name="pending_action_note" position="before">
-        <field name="pending_action_short" widget="badge" string="Что требуется"/>
+        <field name="pending_action_short" widget="badge" string="Что требуется"
+               decoration-danger="pending_action_short == 'declined'"
+               decoration-warning="pending_action_short in ('pay', 'surcharge', 'fill_fields', 'upload_updd', 'arrange_delivery')"
+               decoration-info="pending_action_short == 'to_approve'"
+               decoration-success="pending_action_short == 'none'"/>
       </field>
       <field name="pending_action_note" position="attributes">
         <attribute name="optional">hide</attribute>

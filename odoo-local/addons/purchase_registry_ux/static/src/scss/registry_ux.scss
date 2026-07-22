@@ -1,0 +1,53 @@
+// Раскрывающаяся строка реестра (см. registry_list_renderer.xml) сидит в
+// ТОЙ ЖЕ <table>, что и обычные строки. При table-layout: auto (умолчание
+// Odoo-списков) браузер учитывает минимальную ширину содержимого ЛЮБОЙ
+// ячейки, включая colspan-ячейку раскрытого блока, при расчёте ширины ВСЕХ
+// колонок - из-за этого при раскрытии строки вся шапка/остальные строки
+// "плывут" (обнаружено пользователем по скриншотам 2026-07-23).
+//
+// Фикс: у вложенной таблицы позиций - свой table-layout: fixed и
+// width: 100% - при fixed-layout ширина таблицы больше не зависит от
+// содержимого ячеек вообще, поэтому она не может "продавить" ширины
+// колонок родительской таблицы.
+.o_purchase_registry_expand_row {
+    > td {
+        // overflow-x: auto - если сумма пришла на очень узком экране,
+        // прокрутка появится только у самого блока, а не у всей таблицы.
+        overflow-x: auto;
+    }
+
+    table {
+        table-layout: fixed;
+        width: 100%;
+
+        th:first-child,
+        td:first-child {
+            width: 50%;
+            word-break: break-word;
+        }
+    }
+}
+
+.o_lifecycle_steps {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    vertical-align: middle;
+}
+
+.o_lifecycle_step {
+    display: inline-block;
+    width: 14px;
+    height: 7px;
+    border-radius: 3px;
+    background-color: var(--o-lifecycle-step-todo-bg, #dee2e6);
+}
+
+.o_lifecycle_step_done {
+    background-color: var(--o-lifecycle-step-done-bg, #28a745);
+}
+
+.o_lifecycle_step_current {
+    background-color: var(--o-lifecycle-step-current-bg, #f0ad4e);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
