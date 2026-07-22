@@ -1,0 +1,36 @@
+<odoo>
+  <record id="view_purchase_request_split_wizard_form" model="ir.ui.view">
+    <field name="name">purchase.request.split.wizard.form</field>
+    <field name="model">purchase.request.split.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Разделить заявку">
+        <p>
+          Отметьте позиции, которые пойдут отдельным счётом (например, от
+          другого поставщика) - они переедут в новую заявку. Остальные
+          позиции останутся в этой заявке. В обеих должна остаться хотя бы
+          одна позиция.
+        </p>
+        <field name="request_id" invisible="1"/>
+        <field name="line_ids">
+          <!-- force_save="1" - без него веб-клиент при пересборке команд
+               создания для этих строк (все поля пришли не через
+               собственный default поля, а через default_get визарда)
+               "теряет" readonly-поля целиком - воспроизведено 2026-07-13:
+               INSERT ушёл без request_line_id/name/product_qty, только
+               selected, и упал на NOT NULL. Тот же приём уже используется
+               в стандартной вьюхе Odoo purchase (product_packaging_id). -->
+          <list editable="bottom" create="false" delete="false">
+            <field name="selected" string="Перенести"/>
+            <field name="name" readonly="1" force_save="1"/>
+            <field name="product_qty" readonly="1" force_save="1"/>
+            <field name="request_line_id" column_invisible="True" force_save="1"/>
+          </list>
+        </field>
+        <footer>
+          <button name="action_split" type="object" string="Разделить" class="btn-primary"/>
+          <button string="Отмена" special="cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+</odoo>

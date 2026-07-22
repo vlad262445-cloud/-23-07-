@@ -1,0 +1,189 @@
+<odoo>
+  <!-- Урезанная read-only форма для "Кратко" из реестра - открывается в
+       модальном окне (target='new' в action_open_quick_view), поэтому
+       никаких кнопок действий здесь нет - только сводка, чтобы понять
+       текущее состояние заказа, не уходя со страницы списка. -->
+  <record id="view_purchase_order_quick_view_form" model="ir.ui.view">
+    <field name="name">purchase.order.quick.view.form</field>
+    <field name="model">purchase.order</field>
+    <field name="arch" type="xml">
+      <form string="Заказ - кратко" create="false" edit="false" delete="false">
+        <sheet>
+          <div class="oe_title">
+            <h1>
+              <field name="name"/>
+              <field name="payment_priority" widget="priority" class="ms-2"/>
+            </h1>
+          </div>
+          <group>
+            <group>
+              <field name="request_ids" widget="many2many_tags" string="№ заявки"/>
+              <field name="requester_id" string="Заказчик"/>
+              <field name="partner_id" string="Поставщик"/>
+              <field name="partner_ref" string="№ счёта"/>
+              <field name="user_id" string="Ответственный закупщик"/>
+            </group>
+            <group>
+              <field name="amount_total" widget="monetary" string="Сумма"/>
+              <field name="currency_id" invisible="1"/>
+              <field name="payment_type" string="Тип оплаты"/>
+              <field name="cost_analytic_account_id" string="Статья затрат"/>
+              <field name="cost_category_id" string="Категория"/>
+            </group>
+          </group>
+          <group string="Статус">
+            <group>
+              <field name="state" string="Статус заказа"/>
+              <field name="approval_state" string="Согласование"/>
+            </group>
+            <group>
+              <field name="request_state" string="Статус заявки"/>
+              <field name="document_status" string="Документы"/>
+            </group>
+          </group>
+          <field name="pending_action_note" string="Что сейчас требуется"/>
+          <field name="order_line" string="Позиции">
+            <list create="false" delete="false">
+              <field name="name"/>
+              <field name="product_qty"/>
+              <field name="price_unit"/>
+              <field name="price_subtotal"/>
+            </list>
+          </field>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="view_purchase_registry_list" model="ir.ui.view">
+    <field name="name">purchase.order.registry.list</field>
+    <field name="model">purchase.order</field>
+    <field name="arch" type="xml">
+      <list string="Реестр закупок" create="false" edit="false" delete="false"
+            default_order="payment_priority desc"
+            decoration-danger="approval_state == 'declined' or state == 'cancel'"
+            decoration-warning="approval_state == 'to_approve' or document_status == 'blocked'"
+            decoration-muted="state == 'done'"
+            decoration-info="state in ('draft', 'sent')"
+            decoration-success="state == 'purchase' and document_status != 'blocked' and approval_state != 'declined'">
+        <button name="action_open_quick_view" type="object" string="Кратко" icon="fa-eye"/>
+        <field name="payment_priority" widget="priority" string="Приоритет"/>
+        <field name="name" string="№ закупки"/>
+        <field name="request_ids" widget="many2many_tags" string="№ заявки"/>
+        <field name="requester_id" string="Заказчик"/>
+        <field name="partner_id" string="Поставщик"/>
+        <field name="amount_total" string="Сумма" widget="monetary" sum="Итого"/>
+        <field name="cost_analytic_account_id" string="Статья затрат"/>
+        <field name="cost_category_id" string="Категория"/>
+        <field name="state" widget="badge" string="Статус заказа" optional="hide"
+               decoration-info="state in ('draft', 'sent')"
+               decoration-success="state == 'purchase'"
+               decoration-muted="state == 'done'"
+               decoration-danger="state == 'cancel'"/>
+        <field name="approval_state" widget="badge" string="Согласование"
+               decoration-warning="approval_state == 'to_approve'"
+               decoration-success="approval_state == 'approved'"
+               decoration-danger="approval_state == 'declined'"/>
+        <field name="request_state" widget="badge" string="Статус заявки"
+               decoration-info="request_state in ('requested', 'invoice_generated')"
+               decoration-warning="request_state in ('in_progress', 'in_transit', 'to_approve', 'approved', 'partial_paid')"
+               decoration-success="request_state in ('invoice_paid', 'in_stock')"/>
+        <field name="document_status" widget="badge" string="Документы"
+               decoration-success="document_status == 'done'"
+               decoration-warning="document_status == 'blocked'"/>
+        <field name="pending_action_note" string="Что сейчас требуется"/>
+        <field name="user_id" string="Ответственный закупщик"/>
+        <field name="currency_id" column_invisible="True"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_purchase_registry_search" model="ir.ui.view">
+    <field name="name">purchase.order.registry.search</field>
+    <field name="model">purchase.order</field>
+    <field name="arch" type="xml">
+      <search string="Реестр закупок">
+        <field name="name"/>
+        <field name="partner_id"/>
+        <field name="requester_id"/>
+        <field name="cost_analytic_account_id"/>
+        <field name="cost_category_id"/>
+        <field name="user_id"/>
+        <!-- Поиск по товарам внутри строк заказа - по названию, артикулу
+             или тексту позиции, а не только по номеру закупки/поставщику. -->
+        <field name="order_line" string="Номенклатура"
+               filter_domain="['|', '|',
+                               ('order_line.product_id.name', 'ilike', self),
+                               ('order_line.product_id.default_code', 'ilike', self),
+                               ('order_line.name', 'ilike', self)]"/>
+        <filter string="Требуют согласования" name="filter_to_approve"
+                domain="[('approval_state', '=', 'to_approve')]"/>
+        <filter string="Не хватает документа" name="filter_unconfirmed"
+                domain="[('document_status', '=', 'blocked')]"/>
+        <!-- Не то же самое, что "Требуют согласования" - там только этап
+             согласования, а тут любой этап (доставка/УПД/платёжка), где
+             сейчас назначена активность именно текущему пользователю. -->
+        <filter string="Требуется от меня" name="filter_my_pending_action"
+                domain="[('activity_ids.user_id', '=', uid)]"/>
+        <filter string="Показать все" name="show_all" domain="[]"/>
+        <filter string="Срочно и критично" name="filter_priority_urgent"
+                domain="[('payment_priority', 'in', ('1', '2'))]"/>
+        <separator/>
+        <group expand="0" string="Группировать по">
+          <filter string="Приоритет" name="group_priority" context="{'group_by': 'payment_priority'}"/>
+          <filter string="Статус заказа" name="group_state" context="{'group_by': 'state'}"/>
+          <filter string="Статус заявки" name="group_request_state" context="{'group_by': 'request_state'}"/>
+          <filter string="Согласование" name="group_approval" context="{'group_by': 'approval_state'}"/>
+          <filter string="Поставщик" name="group_partner" context="{'group_by': 'partner_id'}"/>
+          <filter string="Статья затрат" name="group_cost" context="{'group_by': 'cost_analytic_account_id'}"/>
+          <filter string="Категория" name="group_category" context="{'group_by': 'cost_category_id'}"/>
+          <filter string="Заказчик" name="group_requester" context="{'group_by': 'requester_id'}"/>
+          <filter string="Ответственный закупщик" name="group_user" context="{'group_by': 'user_id'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <record id="view_purchase_registry_pivot" model="ir.ui.view">
+    <field name="name">purchase.order.registry.pivot</field>
+    <field name="model">purchase.order</field>
+    <field name="arch" type="xml">
+      <pivot string="Реестр закупок: аналитика">
+        <field name="cost_analytic_account_id" type="row"/>
+        <field name="partner_id" type="col"/>
+        <field name="amount_total" type="measure"/>
+      </pivot>
+    </field>
+  </record>
+
+  <record id="view_purchase_registry_graph" model="ir.ui.view">
+    <field name="name">purchase.order.registry.graph</field>
+    <field name="model">purchase.order</field>
+    <field name="arch" type="xml">
+      <graph string="Реестр закупок: график" type="bar">
+        <field name="cost_analytic_account_id"/>
+        <field name="amount_total" type="measure"/>
+      </graph>
+    </field>
+  </record>
+
+  <record id="action_purchase_registry" model="ir.actions.act_window">
+    <field name="name">Реестр закупок</field>
+    <field name="res_model">purchase.order</field>
+    <field name="view_mode">list,pivot,graph,form</field>
+    <field name="search_view_id" ref="view_purchase_registry_search"/>
+    <field name="context">{'search_default_show_all': 1}</field>
+  </record>
+
+  <record id="action_purchase_registry_list_view" model="ir.actions.act_window.view">
+    <field name="sequence">1</field>
+    <field name="view_mode">list</field>
+    <field name="view_id" ref="view_purchase_registry_list"/>
+    <field name="act_window_id" ref="action_purchase_registry"/>
+  </record>
+
+  <menuitem id="menu_purchase_registry_root" name="Реестр закупок" sequence="10"/>
+  <menuitem id="menu_purchase_registry" name="Реестр закупок"
+            parent="menu_purchase_registry_root"
+            action="action_purchase_registry" sequence="10"/>
+</odoo>

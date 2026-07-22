@@ -1,0 +1,296 @@
+<odoo>
+  <record id="purchase_request_rule_own" model="ir.rule">
+    <field name="name">Запрос КП: обычный пользователь видит только свои</field>
+    <field name="model_id" ref="model_purchase_request"/>
+    <field name="domain_force">[('requested_by', '=', user.id)]</field>
+    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+  </record>
+
+  <record id="purchase_request_rule_buyer_all" model="ir.rule">
+    <field name="name">Запрос КП: закупщик видит все запросы</field>
+    <field name="model_id" ref="model_purchase_request"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('purchase.group_purchase_user'))]"/>
+  </record>
+
+  <!-- "Объединить заявки" может слить заявки от РАЗНЫХ людей/отделов в одну
+       заявку-цель (см. request_merge_wizard.py) - без этого правила автор
+       заявки-донора не смог бы даже открыть заявку-цель, куда перенеслись
+       его позиции: purchase_request_rule_own выше ограничивает обычного
+       пользователя только своими заявками (requested_by = user.id), а
+       заявка-цель обычно принадлежит другому человеку.
+
+       Домен узкий - именно ТА заявка, куда попал донор этого человека, а не
+       весь чужой список. ТОЛЬКО ЧТЕНИЕ (perm_write/create/unlink="0") -
+       см. пояснение у purchase_request_rule_observer_all ниже: base.group_user
+       и так даёт write/create на purchase.request модельно-широко (чтобы
+       можно было редактировать свою черновую заявку), и без явных perm-флагов
+       это правило по тому же механизму дало бы автору донора право
+       РЕДАКТИРОВАТЬ чужую заявку-цель - тот же класс дыры, что был найден
+       2026-07-13 у Наблюдателя (см. память/CLAUDE.md). -->
+  <record id="purchase_request_rule_merge_donor_read" model="ir.rule">
+    <field name="name">Запрос КП: автор донора видит заявку, в которую его объединили</field>
+    <field name="model_id" ref="model_purchase_request"/>
+    <field name="domain_force">[('merged_donor_ids.requested_by', '=', user.id)]</field>
+    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    <field name="perm_read">1</field>
+    <field name="perm_write">0</field>
+    <field name="perm_create">0</field>
+    <field name="perm_unlink">0</field>
+  </record>
+
+  <!-- Закупка (purchase.order): обычный пользователь видит только заказы, где
+       он заявитель связанной заявки КП или назначен согласующим. -->
+  <record id="purchase_order_rule_requester_approver" model="ir.rule">
+    <field name="name">Закупка: заявитель/согласующий видят свои</field>
+    <field name="model_id" ref="purchase.model_purchase_order"/>
+    <field name="domain_force">['|', ('request_ids.requested_by', '=', user.id),
+                                 ('approval_line_ids.approver_id', '=', user.id)]</field>
+    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+  </record>
+
+  <!-- Закупщик (purchase.group_purchase_user) наследует base.group_user, поэтому
+       без этого правила он тоже попал бы под ограничение выше (правила по
+       разным группам одного пользователя объединяются через ИЛИ) - явно
+       возвращаем ему полный доступ, как было до добавления правила согласования. -->
+  <record id="purchase_order_rule_buyer_all" model="ir.rule">
+    <field name="name">Закупка: закупщик видит все заказы</field>
+    <field name="model_id" ref="purchase.model_purchase_order"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('purchase.group_purchase_user'))]"/>
+  </record>
+
+  <!-- purchase.approval.line: согласующий/заявитель видят весь список строк
+       по заказам, которые им уже доступны (см. правило выше), но правят
+       (согласовать/отклонить) только свою строку. -->
+  <record id="purchase_approval_line_rule_read_all" model="ir.rule">
+    <field name="name">Согласование: чтение всех строк по доступным закупкам</field>
+    <field name="model_id" ref="model_purchase_approval_line"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    <field name="perm_read">1</field>
+    <field name="perm_write">0</field>
+    <field name="perm_create">0</field>
+    <field name="perm_unlink">0</field>
+  </record>
+  <record id="purchase_approval_line_rule_own_write" model="ir.rule">
+    <field name="name">Согласование: своя строка на запись</field>
+    <field name="model_id" ref="model_purchase_approval_line"/>
+    <field name="domain_force">[('approver_id', '=', user.id)]</field>
+    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    <field name="perm_read">0</field>
+    <field name="perm_write">1</field>
+    <field name="perm_create">0</field>
+    <field name="perm_unlink">0</field>
+  </record>
+
+  <!-- Тот же нюанс наследования групп, что и выше для purchase.order: без
+       этого правила закупщик (тоже член base.group_user) мог бы редактировать
+       только свои собственные строки согласования вместо всех. -->
+  <record id="purchase_approval_line_rule_buyer_all" model="ir.rule">
+    <field name="name">Согласование: закупщик управляет всеми строками</field>
+    <field name="model_id" ref="model_purchase_approval_line"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('purchase.group_purchase_user'))]"/>
+  </record>
+
+  <!-- Без этого правила главный закупщик (тоже член base.group_user) мог бы
+       писать только в свою собственную строку согласования (см. _own_write
+       выше) - не мог бы добавить нового согласующего или поправить чужую
+       строку, хотя именно он должен управлять составом согласующих. -->
+  <record id="purchase_approval_line_rule_chief_buyer_all" model="ir.rule">
+    <field name="name">Согласование: главный закупщик управляет всеми строками</field>
+    <field name="model_id" ref="model_purchase_approval_line"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('purchase_pdf_import.group_chief_buyer'))]"/>
+  </record>
+
+  <!-- purchase.payment.line: платёжные данные чувствительнее строк
+       согласования (суммы, реквизиты), поэтому в отличие от них видимость
+       для обычного пользователя ограничена теми же заказами, что видны ему
+       по правилу purchase_order_rule_requester_approver выше, а не всем
+       подряд. -->
+  <record id="purchase_payment_line_rule_visible_orders" model="ir.rule">
+    <field name="name">Платежи: видны по доступным пользователю заказам</field>
+    <field name="model_id" ref="model_purchase_payment_line"/>
+    <field name="domain_force">['|',
+                                 ('purchase_order_id.request_ids.requested_by', '=', user.id),
+                                 ('purchase_order_id.approval_line_ids.approver_id', '=', user.id)]</field>
+    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+  </record>
+
+  <!-- Тот же нюанс наследования групп, что и выше: без этого правила
+       закупщик (тоже член base.group_user) видел бы только платежи по
+       заказам, где он сам заявитель/согласующий. -->
+  <record id="purchase_payment_line_rule_buyer_all" model="ir.rule">
+    <field name="name">Платежи: закупщик видит все платежи</field>
+    <field name="model_id" ref="model_purchase_payment_line"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('purchase.group_purchase_user'))]"/>
+  </record>
+
+  <!-- purchase.updd.line: та же логика видимости, что и у платежей. -->
+  <record id="purchase_updd_line_rule_visible_orders" model="ir.rule">
+    <field name="name">УПД: видны по доступным пользователю заказам</field>
+    <field name="model_id" ref="model_purchase_updd_line"/>
+    <field name="domain_force">['|',
+                                 ('purchase_order_id.request_ids.requested_by', '=', user.id),
+                                 ('purchase_order_id.approval_line_ids.approver_id', '=', user.id)]</field>
+    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+  </record>
+
+  <record id="purchase_updd_line_rule_buyer_all" model="ir.rule">
+    <field name="name">УПД: закупщик видит все УПД</field>
+    <field name="model_id" ref="model_purchase_updd_line"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('purchase.group_purchase_user'))]"/>
+  </record>
+
+  <!-- Новые роли (Главный закупщик/Бухгалтер/Кладовщик) наследуют
+       base.group_user, поэтому без явных "видит всё" правил они попали бы
+       под те же ограничения "только свои", что и обычный сотрудник - им
+       нужен широкий обзор для мониторинга/поиска подходящих заказов. -->
+  <record id="purchase_request_rule_chief_buyer_all" model="ir.rule">
+    <field name="name">Запрос КП: главный закупщик видит все запросы</field>
+    <field name="model_id" ref="model_purchase_request"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_chief_buyer'))]"/>
+  </record>
+  <record id="purchase_request_rule_accountant_all" model="ir.rule">
+    <field name="name">Запрос КП: бухгалтер видит все запросы</field>
+    <field name="model_id" ref="model_purchase_request"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_accountant'))]"/>
+  </record>
+  <record id="purchase_request_rule_warehouse_keeper_all" model="ir.rule">
+    <field name="name">Запрос КП: кладовщик видит все запросы</field>
+    <field name="model_id" ref="model_purchase_request"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_warehouse_keeper'))]"/>
+  </record>
+
+  <record id="purchase_order_rule_chief_buyer_all" model="ir.rule">
+    <field name="name">Закупка: главный закупщик видит все заказы</field>
+    <field name="model_id" ref="purchase.model_purchase_order"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_chief_buyer'))]"/>
+  </record>
+  <record id="purchase_order_rule_accountant_all" model="ir.rule">
+    <field name="name">Закупка: бухгалтер видит все заказы</field>
+    <field name="model_id" ref="purchase.model_purchase_order"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_accountant'))]"/>
+  </record>
+  <record id="purchase_order_rule_warehouse_keeper_all" model="ir.rule">
+    <field name="name">Закупка: кладовщик видит все заказы</field>
+    <field name="model_id" ref="purchase.model_purchase_order"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_warehouse_keeper'))]"/>
+  </record>
+
+  <!-- Наблюдатель: та же широкая видимость, что у Главного закупщика/
+       Бухгалтера/Кладовщика (нужно для "Реестра закупок" и полного списка
+       заявок). Изначально платежи/УПД не дублировались сюда - решили, что
+       это лишнее для роли "видеть, на каком этапе затык" - но 2026-07-15
+       пересмотрели: Боровику и Федчину всё же нужно видеть сумму оплаты и
+       УПД, см. purchase_payment_line_rule_observer_all/
+       purchase_updd_line_rule_observer_all ниже.
+
+       ТОЛЬКО ЧТЕНИЕ (perm_write/create/unlink="0") - без этого ограничения
+       правило с доменом [(1,=,1)] действует на все 4 операции по умолчанию,
+       а base.group_user уже даёт write/create на purchase.request (нужно,
+       чтобы Наблюдатель мог подавать СВОИ заявки через purchase_request_rule_own
+       выше) - в сумме это тихо разрешало ему редактировать вообще ЛЮБУЮ
+       чужую заявку (обнаружено 2026-07-13: Боровик редактировал заявку
+       Ольги Скрыник). Для purchase.order такой дыры нет - там базовые
+       права base.group_user и так read-only (см. access_purchase_order_user_ro
+       в ir.model.access.csv), поэтому там это ограничение не требуется. -->
+  <record id="purchase_request_rule_observer_all" model="ir.rule">
+    <field name="name">Запрос КП: наблюдатель видит все запросы</field>
+    <field name="model_id" ref="model_purchase_request"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_observer'))]"/>
+    <field name="perm_read">1</field>
+    <field name="perm_write">0</field>
+    <field name="perm_create">0</field>
+    <field name="perm_unlink">0</field>
+  </record>
+  <record id="purchase_order_rule_observer_all" model="ir.rule">
+    <field name="name">Закупка: наблюдатель видит все заказы</field>
+    <field name="model_id" ref="purchase.model_purchase_order"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_observer'))]"/>
+  </record>
+
+  <!-- Пересмотрено 2026-07-15 - Боровику и Федчину (роль "Наблюдатель")
+       всё же нужно видеть сумму оплаты по заказу, не только его статус.
+       ТОЛЬКО ЧТЕНИЕ - см. пояснение у purchase_request_rule_observer_all
+       выше про то, почему это нужно проставлять явно, а не полагаться на
+       умолчание домена [(1,=,1)]. -->
+  <record id="purchase_payment_line_rule_observer_all" model="ir.rule">
+    <field name="name">Платежи: наблюдатель видит все платежи</field>
+    <field name="model_id" ref="model_purchase_payment_line"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_observer'))]"/>
+    <field name="perm_read">1</field>
+    <field name="perm_write">0</field>
+    <field name="perm_create">0</field>
+    <field name="perm_unlink">0</field>
+  </record>
+
+  <!-- Тот же пересмотр 2026-07-15, что и для платежей выше - Наблюдатель
+       должен видеть и УПД, не только статус заказа. -->
+  <record id="purchase_updd_line_rule_observer_all" model="ir.rule">
+    <field name="name">УПД: наблюдатель видит все УПД</field>
+    <field name="model_id" ref="model_purchase_updd_line"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_observer'))]"/>
+    <field name="perm_read">1</field>
+    <field name="perm_write">0</field>
+    <field name="perm_create">0</field>
+    <field name="perm_unlink">0</field>
+  </record>
+
+  <record id="purchase_payment_line_rule_chief_buyer_all" model="ir.rule">
+    <field name="name">Платежи: главный закупщик видит все платежи</field>
+    <field name="model_id" ref="model_purchase_payment_line"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_chief_buyer'))]"/>
+  </record>
+  <record id="purchase_payment_line_rule_accountant_all" model="ir.rule">
+    <field name="name">Платежи: бухгалтер видит все платежи</field>
+    <field name="model_id" ref="model_purchase_payment_line"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_accountant'))]"/>
+  </record>
+
+  <record id="purchase_updd_line_rule_chief_buyer_all" model="ir.rule">
+    <field name="name">УПД: главный закупщик видит все УПД</field>
+    <field name="model_id" ref="model_purchase_updd_line"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_chief_buyer'))]"/>
+  </record>
+  <record id="purchase_updd_line_rule_warehouse_keeper_all" model="ir.rule">
+    <field name="name">УПД: кладовщик видит все УПД</field>
+    <field name="model_id" ref="model_purchase_updd_line"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_warehouse_keeper'))]"/>
+  </record>
+
+  <record id="warehouse_scrap_request_rule_own" model="ir.rule">
+    <field name="name">Списание: обычный пользователь видит только свои заявки</field>
+    <field name="model_id" ref="model_warehouse_scrap_request"/>
+    <field name="domain_force">[('requester_id', '=', user.id)]</field>
+    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+  </record>
+
+  <!-- Тот же нюанс наследования групп, что и у остальных моделей этого файла:
+       без этого правила закупщик (тоже член base.group_user) видел бы только
+       свои собственные заявки вместо всех, ожидающих его решения. -->
+  <record id="warehouse_scrap_request_rule_buyer_all" model="ir.rule">
+    <field name="name">Списание: закупщик видит все заявки</field>
+    <field name="model_id" ref="model_warehouse_scrap_request"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('purchase.group_purchase_user'))]"/>
+  </record>
+</odoo>

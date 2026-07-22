@@ -1,0 +1,48 @@
+# Изолированная локальная разработка ТЗ (purchase_pdf_import + 9 новых модулей).
+# Отдельный project name, контейнеры, том и порты — не пересекается с другими
+# проектами на этой машине (в т.ч. с C:\Users\user\Documents\Odoo 18, который
+# уже занимает 8069/8072).
+name: odoo18tz
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    container_name: odoo18tz_db
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: "localdev2026tz"
+    volumes:
+      - odoo18tz_pgdata:/var/lib/postgresql/data
+    networks:
+      - odoo18tz_net
+
+  odoo:
+    build: .
+    image: odoo18tz-pdf-import:local
+    restart: unless-stopped
+    container_name: odoo18tz_odoo
+    depends_on:
+      - db
+    ports:
+      - "8169:8069"
+      - "8172:8072"
+    environment:
+      HOST: db
+      PORT: 5432
+      USER: odoo
+      PASSWORD: "localdev2026tz"
+    volumes:
+      - ./data:/var/lib/odoo
+      - ./addons:/mnt/extra-addons
+      - ./config/odoo.conf:/etc/odoo/odoo.conf
+    networks:
+      - odoo18tz_net
+
+volumes:
+  odoo18tz_pgdata:
+
+networks:
+  odoo18tz_net:
+    driver: bridge

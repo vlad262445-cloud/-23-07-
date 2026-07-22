@@ -1,0 +1,42 @@
+<odoo>
+  <!-- Роли, которые сейчас различаются по реальным обязанностям в компании
+       (Мастер участка = base.group_user, Закупщик = purchase.group_purchase_user
+       уже существуют) - здесь только новые: -->
+
+  <record id="group_chief_buyer" model="res.groups">
+    <field name="name">Главный закупщик</field>
+    <field name="category_id" ref="base.module_category_inventory_purchase"/>
+    <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    <field name="comment">Согласует закупки и следит, на каком этапе находится заявка.</field>
+  </record>
+
+  <record id="group_accountant" model="res.groups">
+    <field name="name">Бухгалтер</field>
+    <field name="category_id" ref="base.module_category_inventory_purchase"/>
+    <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    <field name="comment">Оплачивает счета и прикрепляет платёжки.</field>
+  </record>
+
+  <record id="group_warehouse_keeper" model="res.groups">
+    <field name="name">Кладовщик</field>
+    <field name="category_id" ref="base.module_category_inventory_purchase"/>
+    <!-- stock.group_stock_user - без неё не видно кнопки "Validate" на
+         приёмке и других складских действий, нужных для этой роли. -->
+    <field name="implied_ids" eval="[(4, ref('base.group_user')), (4, ref('stock.group_stock_user'))]"/>
+    <field name="comment">Оформляет приёмку товара на складе и прикрепляет УПД. Пока эту роль исполняет закупщик.</field>
+  </record>
+
+  <!-- Не согласующий и не Главный закупщик - в отличие от него, участник
+       этой группы НЕ добавляется автоматически в approval_line_ids ни на
+       один заказ (см. _add_chief_buyer_approval_lines в purchase_order.py,
+       она читает конкретно users группы "Главный закупщик", эту группу не
+       трогает), то есть чисто смотрит, ничего не блокирует. -->
+  <record id="group_observer" model="res.groups">
+    <field name="name">Наблюдатель</field>
+    <field name="category_id" ref="base.module_category_inventory_purchase"/>
+    <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    <field name="comment">Видит все заявки/заказы для контроля хода закупок (на каком
+      этапе затык), может подавать свои заявки. Не согласует, не платит,
+      не принимает товар и не становится согласующим на чужих заказах.</field>
+  </record>
+</odoo>

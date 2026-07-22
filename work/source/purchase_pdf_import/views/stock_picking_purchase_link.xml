@@ -1,0 +1,71 @@
+<odoo>
+  <record id="view_stock_picking_form_inherit_purchase_link" model="ir.ui.view">
+    <field name="name">stock.picking.form.inherit.purchase.link</field>
+    <field name="model">stock.picking</field>
+    <field name="inherit_id" ref="stock.view_picking_form"/>
+    <field name="arch" type="xml">
+      <!-- Validate по умолчанию видна только группе Склад/Пользователь - её
+           тоже открыли главному закупщику вместе с "Получить продукты"
+           (см. purchase_order_line_extra_views.xml), иначе кнопка привела
+           бы его на пустую страницу без возможности реально принять товар. -->
+      <xpath expr="//button[@name='button_validate'][hasclass('oe_highlight')]" position="attributes">
+        <attribute name="groups" add="purchase_pdf_import.group_chief_buyer" separator=","/>
+      </xpath>
+      <xpath expr="//button[@name='button_validate'][hasclass('o_btn_validate')]" position="attributes">
+        <attribute name="groups" add="purchase_pdf_import.group_chief_buyer" separator=","/>
+      </xpath>
+      <!-- УПД подтверждает именно эту приёмку - даём загрузить/пропустить
+           его прямо здесь, а не заставляем возвращаться на заказ. -->
+      <xpath expr="//header" position="inside">
+        <button name="action_open_updd_import_wizard" type="object" string="Загрузить УПД"
+                groups="purchase_pdf_import.group_warehouse_keeper,purchase_pdf_import.group_chief_buyer"
+                invisible="state != 'done' or picking_type_code != 'incoming' or updd_line_ids"/>
+        <button name="action_skip_updd" type="object" string="Пропустить УПД"
+                groups="purchase_pdf_import.group_warehouse_keeper,purchase_pdf_import.group_chief_buyer"
+                confirm="Отметить, что УПД не будет прикреплён к этому заказу?"
+                invisible="state != 'done' or picking_type_code != 'incoming' or updd_line_ids or updd_skipped"/>
+      </xpath>
+      <div class="oe_button_box" name="button_box" position="inside">
+        <button type="object" name="action_view_source_purchase_order"
+                class="oe_stat_button" icon="fa-shopping-cart"
+                invisible="not source_purchase_order_id">
+          <field name="source_purchase_order_id" widget="statinfo" string="Заказ"/>
+        </button>
+      </div>
+      <!-- Строка "Исходный документ" - обычное текстовое поле origin, само по
+           себе не кликабельно. Когда за ней стоит наш заказ на закупку,
+           показываем вместо неё Many2one на ту же позицию - Odoo сам рендерит
+           его как ссылку, кликабельную ровно там, где пользователь её ищет. -->
+      <field name="origin" position="attributes">
+        <attribute name="invisible">source_purchase_order_id</attribute>
+      </field>
+      <field name="origin" position="after">
+        <field name="source_purchase_order_id" string="Исходный документ"
+               invisible="not source_purchase_order_id"/>
+      </field>
+      <xpath expr="//notebook" position="inside">
+        <page string="УПД" name="updd" invisible="not source_purchase_order_id and not updd_line_ids">
+          <field name="updd_line_ids" readonly="1">
+            <list decoration-success="partner_matched" decoration-danger="not partner_matched">
+              <!-- ИИ иногда ошибается при распознавании - кнопка открывает
+                   форму для правки данных этой конкретной строки. Работает
+                   и здесь, для УПД без заказа, потому что правка идёт прямо
+                   в саму запись purchase.updd.line по её id, а не через
+                   updd_line_ids этой формы (тут оно - compute без inverse,
+                   через editable-список сохранить было бы нельзя). -->
+              <button name="action_open_correction_form" type="object" string="Исправить" icon="fa-pencil"
+                      groups="purchase.group_purchase_user,purchase_pdf_import.group_warehouse_keeper,purchase_pdf_import.group_chief_buyer"/>
+              <field name="updd_date" string="Дата"/>
+              <field name="updd_number"/>
+              <field name="amount" sum="Итого"/>
+              <field name="seller_name"/>
+              <field name="seller_inn"/>
+              <field name="partner_matched"/>
+              <field name="attachment_id"/>
+            </list>
+          </field>
+        </page>
+      </xpath>
+    </field>
+  </record>
+</odoo>

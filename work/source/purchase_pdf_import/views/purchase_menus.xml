@@ -1,0 +1,13 @@
+<odoo>
+  <menuitem id="menu_purchase_pdf_import_wizard"
+            name="Импорт из PDF"
+            parent="purchase.menu_procurement_management"
+            action="purchase_pdf_import.action_purchase_pdf_import_wizard"
+            sequence="15"/>
+
+  <menuitem id="menu_purchase_pdf_import_settings"
+            name="Настройки импорта PDF"
+            parent="purchase.menu_purchase_config"
+            action="purchase_pdf_import.action_purchase_pdf_import_settings"
+            sequence="50"/>
+</odoo>

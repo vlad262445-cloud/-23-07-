@@ -1,0 +1,48 @@
+# Локальная разработка. Пути относительные — работает из любого каталога.
+# Имена контейнеров отличаются от боевых, чтобы ничего не пересеклось.
+#
+# Перед запуском:
+#   1) заменить ЗАМЕНИТЬ_ПАРОЛЬ на любое локальное значение (в трёх местах)
+#   2) то же значение прописать в config/odoo.conf (db_password)
+#   3) mkdir -p addons config data
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    container_name: odoo_db_local
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: "ЗАМЕНИТЬ_ПАРОЛЬ"
+    volumes:
+      - pgdata_local:/var/lib/postgresql/data
+    networks:
+      - odoo_net
+
+  odoo:
+    image: odoo:18.0
+    restart: unless-stopped
+    container_name: odoo_app_local
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"
+      - "8072:8072"
+    environment:
+      HOST: db
+      PORT: 5432
+      USER: odoo
+      PASSWORD: "ЗАМЕНИТЬ_ПАРОЛЬ"
+    volumes:
+      - ./data:/var/lib/odoo
+      - ./addons:/mnt/extra-addons
+      - ./config/odoo.conf:/etc/odoo/odoo.conf
+    networks:
+      - odoo_net
+
+volumes:
+  pgdata_local:
+
+networks:
+  odoo_net:
+    driver: bridge

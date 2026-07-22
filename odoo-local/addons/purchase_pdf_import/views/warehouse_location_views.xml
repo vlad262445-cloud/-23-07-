@@ -1,0 +1,121 @@
+<odoo>
+  <record id="view_stock_location_kanban_warehouse" model="ir.ui.view">
+    <field name="name">stock.location.kanban.warehouse</field>
+    <field name="model">stock.location</field>
+    <field name="arch" type="xml">
+      <kanban>
+        <field name="name"/>
+        <field name="usage"/>
+        <field name="child_ids"/>
+        <field name="warehouse_quant_count"/>
+        <field name="warehouse_total_quantity"/>
+        <field name="warehouse_description"/>
+        <templates>
+          <t t-name="card">
+            <a type="object" name="action_warehouse_drill_down" class="oe_kanban_global_click">
+              <div class="oe_kanban_card">
+                <div class="d-flex justify-content-between">
+                  <strong><field name="name"/></strong>
+                  <span class="badge text-bg-info" t-if="record.child_ids.raw_value.length">Раздел</span>
+                  <span class="badge text-bg-secondary" t-else="">Ячейка</span>
+                </div>
+                <div>Товаров: <field name="warehouse_quant_count"/></div>
+                <div>Кол-во: <field name="warehouse_total_quantity"/></div>
+                <div class="text-muted"><field name="warehouse_description"/></div>
+              </div>
+            </a>
+          </t>
+        </templates>
+      </kanban>
+    </field>
+  </record>
+
+  <!-- Раньше это был ir.actions.server (Python-код искал view_location_id
+       склада и строил домен на лету) - но Odoo требует write-доступ к
+       модели у вызывающего для ЛЮБОГО серверного экшена с кодом, даже если
+       сам код ничего не пишет, поэтому кнопка была недоступна всем, кроме
+       stock.group_stock_manager (Асадуллин сообщил об ошибке доступа при
+       клике). В системе один склад, а его корневая (view) локация всегда
+       прямой ребёнок стандартной "Physical Locations" - это позволяет
+       выразить тот же домен статично, без серверного кода. -->
+  <record id="action_warehouse_location_kanban" model="ir.actions.act_window">
+    <field name="name">Остатки по ячейкам</field>
+    <field name="res_model">stock.location</field>
+    <field name="view_mode">kanban</field>
+    <field name="view_id" ref="view_stock_location_kanban_warehouse"/>
+    <field name="domain" eval="[('location_id.location_id', '=', ref('stock.stock_location_locations'))]"/>
+  </record>
+
+  <record id="view_warehouse_rack_wizard_form" model="ir.ui.view">
+    <field name="name">warehouse.rack.wizard.form</field>
+    <field name="model">warehouse.rack.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Добавить стеллаж">
+        <group>
+          <field name="parent_location_id"/>
+          <field name="name"/>
+          <field name="shelf_count"/>
+          <field name="has_organizers"/>
+        </group>
+        <footer>
+          <button name="action_confirm" string="Создать" type="object" class="btn-primary"/>
+          <button string="Отмена" special="cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_warehouse_rack_wizard" model="ir.actions.act_window">
+    <field name="name">Добавить стеллаж</field>
+    <field name="res_model">warehouse.rack.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+
+  <record id="view_warehouse_organizer_wizard_form" model="ir.ui.view">
+    <field name="name">warehouse.organizer.wizard.form</field>
+    <field name="model">warehouse.organizer.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Добавить органайзер">
+        <group>
+          <field name="shelf_location_id"/>
+          <field name="name"/>
+          <field name="cell_count"/>
+        </group>
+        <footer>
+          <button name="action_confirm" string="Создать" type="object" class="btn-primary"/>
+          <button string="Отмена" special="cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_warehouse_organizer_wizard" model="ir.actions.act_window">
+    <field name="name">Добавить органайзер</field>
+    <field name="res_model">warehouse.organizer.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+
+  <menuitem id="menu_warehouse_location_kanban"
+            name="Остатки по ячейкам"
+            parent="menu_warehouse_root"
+            action="action_warehouse_location_kanban"
+            sequence="25"/>
+
+  <menuitem id="menu_warehouse_config"
+            name="Конфигурация"
+            parent="menu_warehouse_root"
+            groups="purchase.group_purchase_user"
+            sequence="90"/>
+  <menuitem id="menu_warehouse_rack_wizard"
+            name="Добавить стеллаж"
+            parent="menu_warehouse_config"
+            action="action_warehouse_rack_wizard"
+            sequence="10"/>
+  <menuitem id="menu_warehouse_organizer_wizard"
+            name="Добавить органайзер"
+            parent="menu_warehouse_config"
+            action="action_warehouse_organizer_wizard"
+            sequence="20"/>
+</odoo>

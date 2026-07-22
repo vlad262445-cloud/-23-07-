@@ -1,0 +1,149 @@
+<odoo>
+  <record id="view_purchase_order_form_inherit_pdf_import" model="ir.ui.view">
+    <field name="name">purchase.order.form.inherit.pdf.import.tax.column</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase.purchase_order_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='order_line']/list/field[@name='price_subtotal']" position="after">
+        <field name="price_total" string="Сумма с налогом" optional="show"/>
+      </xpath>
+      <xpath expr="//header" position="inside">
+        <field name="request_state" invisible="1"/>
+        <field name="approval_state" invisible="1"/>
+        <field name="can_arrange_delivery" invisible="1"/>
+        <field name="updd_relevant" invisible="1"/>
+        <button name="action_arrange_delivery" type="object" string="Оформить доставку"
+                groups="purchase.group_purchase_user,purchase_pdf_import.group_chief_buyer"
+                confirm="Отметить, что доставка согласована и товар в пути?"
+                invisible="not can_arrange_delivery"/>
+        <!-- request_state специально "застревает" на to_approve после
+             одобрения (следующий реальный шаг - оплата/получение - сам
+             решает, куда двигать статус дальше), поэтому "ещё не одобрено"
+             проверяем через approval_state, а не через request_state. -->
+        <button name="action_open_payment_import_wizard" type="object" string="Загрузить платёжку"
+                groups="purchase_pdf_import.group_accountant"
+                invisible="state not in ('purchase', 'done')
+                           or (approval_line_ids and approval_state != 'approved')
+                           or request_state == 'invoice_paid'"/>
+        <button name="action_skip_payment" type="object" string="Пропустить платёжку"
+                groups="purchase_pdf_import.group_accountant"
+                confirm="Отметить, что платёжка не будет прикреплена к этому заказу?"
+                invisible="state not in ('purchase', 'done') or payment_line_ids or payment_skipped"/>
+        <button name="action_open_updd_import_wizard" type="object" string="Загрузить УПД"
+                groups="purchase_pdf_import.group_warehouse_keeper,purchase_pdf_import.group_chief_buyer"
+                invisible="not updd_relevant or updd_line_ids"/>
+        <button name="action_skip_updd" type="object" string="Пропустить УПД"
+                groups="purchase_pdf_import.group_warehouse_keeper,purchase_pdf_import.group_chief_buyer"
+                confirm="Отметить, что УПД не будет прикреплён к этому заказу?"
+                invisible="not updd_relevant or updd_line_ids or updd_skipped"/>
+      </xpath>
+      <!-- "Получить продукты" по умолчанию видна только группе
+           Склад/Пользователь - главному закупщику это тоже разрешили
+           (мониторинг перестал быть чисто просмотровым для этой конкретной
+           операции), поэтому добавляем его группу к обеим версиям кнопки
+           (в шапке и в виде счётчика), не давая всей группы stock.group_stock_user
+           целиком (это открыло бы всё приложение "Инвентаризация" и лишние
+           складские возможности, которые не просили). -->
+      <xpath expr="//button[@name='action_view_picking'][hasclass('oe_highlight')]" position="attributes">
+        <attribute name="groups" add="purchase_pdf_import.group_chief_buyer" separator=","/>
+      </xpath>
+      <xpath expr="//button[@name='action_view_picking'][hasclass('oe_stat_button')]" position="attributes">
+        <attribute name="groups" add="purchase_pdf_import.group_chief_buyer" separator=","/>
+      </xpath>
+      <!-- Согласующий видит только сам заказ - без этой кнопки ему негде
+           проверить исходную заявку с участка (кто просил, отдел,
+           комментарий), прежде чем согласовать закупку. -->
+      <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+        <button name="action_view_request" type="object" class="oe_stat_button"
+                icon="fa-file-text-o" invisible="not request_ids">
+          <field name="request_ids" widget="statinfo" string="Заявка"/>
+        </button>
+      </xpath>
+      <xpath expr="//div[hasclass('oe_title')]" position="before">
+        <field name="document_status" invisible="1"/>
+        <div class="alert alert-warning" role="alert" invisible="document_status != 'blocked'">
+          <strong>Внимание:</strong> <field name="document_status_note" readonly="1" nolabel="1" class="oe_inline"/>
+        </div>
+        <!-- Согласующий/бухгалтер/кладовщик, просто открыв заказ, не всегда
+             понимают, требуется ли от них какое-то действие прямо сейчас -
+             отдельная короткая строка поверх уже посчитанной логики
+             (согласование/доставка/УПД), а не дублирование баннера выше -
+             при document_status == 'blocked' там уже тот же текст. -->
+        <div class="alert alert-info" role="alert"
+             invisible="not pending_action_note or document_status == 'blocked'">
+          <strong>Требуется:</strong> <field name="pending_action_note" readonly="1" nolabel="1" class="oe_inline"/>
+        </div>
+      </xpath>
+      <!-- Стандартная надпись Odoo для черновика заказа - "Запрос на
+           коммерческое предложение" (RFQ) - здесь вводит в заблуждение:
+           заказ в этом процессе формируется сразу из уже полученного от
+           поставщика счёта (ИИ-импорт), а не отправляется поставщику как
+           запрос цены. Не трогаем вторую надпись ("Заказ на закупку" для
+           подтверждённого состояния) - она и так корректна. -->
+      <xpath expr="//div[hasclass('oe_title')]/span[1]" position="replace">
+        <span class="o_form_label" invisible="state not in ('draft', 'sent')">Формирование закупки </span>
+      </xpath>
+    </field>
+  </record>
+
+  <!-- Стандартный список "Заказы на закупку" (родное меню Odoo Закупки) -
+       показывает только родной статус Odoo, который никак не отражает наш
+       процесс согласования/оплаты/УПД. Главный закупщик смотрел именно этот
+       список (а не наш "Реестр закупок") и не мог понять, требуется ли от
+       него действие - добавляем ту же короткую строку сюда же, а не только
+       в кастомный реестр. -->
+  <record id="view_purchase_order_kpis_tree_inherit_pdf_import" model="ir.ui.view">
+    <field name="name">purchase.order.kpis.tree.inherit.pdf.import.pending.action</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='state']" position="before">
+        <field name="pending_action_note" string="Что сейчас требуется" optional="show"/>
+      </xpath>
+    </field>
+  </record>
+
+  <!-- У Odoo для purchase.order на самом деле ТРИ разных списка -
+       purchase_order_view_tree и purchase_order_tree тоже, не только
+       kpis_tree выше. Живая проверка 2026-07-15 через get_views показала,
+       что реально рендерится именно purchase_order_tree (priority=1, самый
+       высокий приоритет среди всех trois - поэтому он и побеждает как
+       view по умолчанию для обычного действия "Заказы на закупку", а не
+       kpis_tree). Патчим все три, а не гадаем, какой из них "правильный". -->
+  <record id="view_purchase_order_view_tree_inherit_pdf_import" model="ir.ui.view">
+    <field name="name">purchase.order.view.tree.inherit.pdf.import.pending.action</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase.purchase_order_view_tree"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='state']" position="before">
+        <field name="pending_action_note" string="Что сейчас требуется" optional="show"/>
+      </xpath>
+    </field>
+  </record>
+
+  <record id="view_purchase_order_tree_inherit_pdf_import" model="ir.ui.view">
+    <field name="name">purchase.order.tree.inherit.pdf.import.pending.action</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase.purchase_order_tree"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='state']" position="before">
+        <field name="pending_action_note" string="Что сейчас требуется" optional="show"/>
+      </xpath>
+    </field>
+  </record>
+
+  <!-- "Мои закупки" (my_purchases) в штатном поиске Odoo - это "я
+       ответственный закупщик по заказу" (user_id), а не "у меня сейчас
+       есть активность по нему" - разные вещи для согласующих/бухгалтера/
+       кладовщика, которым назначают activity, но они не user_id заказа. -->
+  <record id="view_purchase_order_filter_inherit_pdf_import" model="ir.ui.view">
+    <field name="name">purchase.order.filter.inherit.pdf.import.pending.action</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase.view_purchase_order_filter"/>
+    <field name="arch" type="xml">
+      <xpath expr="//filter[@name='my_purchases']" position="after">
+        <filter name="my_pending_action" string="Требуется от меня" domain="[('activity_ids.user_id', '=', uid)]"/>
+      </xpath>
+    </field>
+  </record>
+</odoo>

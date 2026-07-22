@@ -1,0 +1,39 @@
+<odoo>
+  <!-- Чисто UI-удобство поверх уже существующих ролей (models/res_users.py,
+       _ROLE_GROUPS) - ни одной новой комбинации прав тут не появляется, это
+       просто построчное редактирование тех же 5 полей, что уже есть на
+       вкладке Preferences у каждого сотрудника по отдельности. Реальная
+       защита - штатный ACL Odoo на res.users (запись в чужого пользователя
+       и так доступна только base.group_system) - groups= здесь декоративный
+       дублирующий слой, по стилю этого модуля. -->
+  <record id="view_res_users_roles_matrix_list" model="ir.ui.view">
+    <field name="name">res.users.roles.matrix.list</field>
+    <field name="model">res.users</field>
+    <field name="arch" type="xml">
+      <list string="Роли сотрудников" create="false" delete="false" default_order="name" editable="bottom">
+        <field name="name"/>
+        <field name="department_id"/>
+        <field name="is_buyer" widget="boolean_toggle"/>
+        <field name="is_chief_buyer" widget="boolean_toggle"/>
+        <field name="is_accountant" widget="boolean_toggle"/>
+        <field name="is_warehouse_keeper" widget="boolean_toggle"/>
+        <field name="is_observer" widget="boolean_toggle"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_res_users_roles_matrix" model="ir.actions.act_window">
+    <field name="name">Роли сотрудников</field>
+    <field name="res_model">res.users</field>
+    <field name="view_mode">list</field>
+    <field name="view_id" ref="view_res_users_roles_matrix_list"/>
+    <field name="domain">[('share', '=', False)]</field>
+  </record>
+
+  <menuitem id="menu_res_users_roles_matrix"
+            name="Роли сотрудников"
+            parent="purchase.menu_purchase_config"
+            action="action_res_users_roles_matrix"
+            sequence="60"
+            groups="base.group_system"/>
+</odoo>

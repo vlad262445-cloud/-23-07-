@@ -1,0 +1,35 @@
+<odoo>
+  <!-- Открывается из кнопки-карандаша на списке "УПД" (и на заказе, и на
+       приёмке без заказа - см. purchase_payment_views.xml/
+       stock_picking_purchase_link.xml) - редактирование идёт напрямую в
+       эту запись по её id, в обход One2many-механики родителя (у приёмки
+       без заказа updd_line_ids - compute-поле без inverse, писать через
+       editable-список там молча не получилось бы). -->
+  <record id="view_purchase_updd_line_form" model="ir.ui.view">
+    <field name="name">purchase.updd.line.form</field>
+    <field name="model">purchase.updd.line</field>
+    <field name="arch" type="xml">
+      <form string="УПД - исправление данных" create="false" delete="false">
+        <sheet>
+          <group>
+            <group>
+              <field name="purchase_order_id" readonly="1" invisible="not purchase_order_id"/>
+              <field name="picking_id" readonly="1" invisible="not picking_id"/>
+              <field name="updd_number"/>
+              <field name="updd_date"/>
+              <field name="amount"/>
+            </group>
+            <group>
+              <field name="seller_name"/>
+              <field name="seller_inn"/>
+              <field name="partner_matched"/>
+              <!-- Переподвязать файл на другое вложение - это не опечатку
+                   поправить, сознательно оставляем нередактируемым. -->
+              <field name="attachment_id" readonly="1"/>
+            </group>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+</odoo>

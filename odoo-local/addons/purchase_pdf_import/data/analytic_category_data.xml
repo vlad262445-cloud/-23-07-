@@ -1,0 +1,49 @@
+<odoo noupdate="1">
+  <!-- Отдельная ось аналитики от "Статья затрат" (существующие планы
+       1/2/3 - природа расхода): здесь - направление/тип продукции, по
+       которому закупка ведётся (Самозарядные/Винтовки/Тюнинг/...). -->
+  <record id="analytic_plan_category" model="account.analytic.plan">
+    <field name="name">Категория</field>
+  </record>
+
+  <record id="analytic_category_samozaryadnye" model="account.analytic.account">
+    <field name="name">Самозарядные</field>
+    <field name="code">001</field>
+    <field name="plan_id" ref="analytic_plan_category"/>
+  </record>
+  <record id="analytic_category_vintovki" model="account.analytic.account">
+    <field name="name">Винтовки</field>
+    <field name="code">002</field>
+    <field name="plan_id" ref="analytic_plan_category"/>
+  </record>
+  <record id="analytic_category_storonnie_zakazy" model="account.analytic.account">
+    <field name="name">Сторонние заказы</field>
+    <field name="code">003</field>
+    <field name="plan_id" ref="analytic_plan_category"/>
+  </record>
+  <record id="analytic_category_tyuning" model="account.analytic.account">
+    <field name="name">Тюнинг</field>
+    <field name="code">004</field>
+    <field name="plan_id" ref="analytic_plan_category"/>
+  </record>
+  <record id="analytic_category_opytnoe" model="account.analytic.account">
+    <field name="name">Опытное</field>
+    <field name="code">005</field>
+    <field name="plan_id" ref="analytic_plan_category"/>
+  </record>
+  <record id="analytic_category_masterskaya" model="account.analytic.account">
+    <field name="name">Мастерская</field>
+    <field name="code">006</field>
+    <field name="plan_id" ref="analytic_plan_category"/>
+  </record>
+  <record id="analytic_category_marketing" model="account.analytic.account">
+    <field name="name">Маркетинг</field>
+    <field name="code">007</field>
+    <field name="plan_id" ref="analytic_plan_category"/>
+  </record>
+  <record id="analytic_category_obespechenie_proizvodstva" model="account.analytic.account">
+    <field name="name">Обеспечение производства</field>
+    <field name="code">008</field>
+    <field name="plan_id" ref="analytic_plan_category"/>
+  </record>
+</odoo>

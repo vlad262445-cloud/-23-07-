@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16
+    restart: always
+    container_name: odoo_db
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: "ЗАМЕНИТЬ_ПАРОЛЬ"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - odoo_net
+
+  odoo:
+    image: odoo:18.0
+    restart: always
+    container_name: odoo_app
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"
+      - "8072:8072"
+    environment:
+      HOST: db
+      PORT: 5432
+      USER: odoo
+      PASSWORD: "ЗАМЕНИТЬ_ПАРОЛЬ"
+    volumes:
+      - /opt/odoo/data:/var/lib/odoo
+      - /opt/odoo/addons:/mnt/extra-addons
+      - /opt/odoo/config/odoo.conf:/etc/odoo/odoo.conf
+    networks:
+      - odoo_net
+
+volumes:
+  pgdata:
+
+networks:
+  odoo_net:
+    driver: bridge

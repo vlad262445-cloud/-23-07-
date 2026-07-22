@@ -1,0 +1,19 @@
+<odoo>
+  <!-- Родное поле Odoo purchase.order.priority (2 уровня, 1 звезда) остаётся
+       в базе (core-модель, трогать не нужно), но на форме заменяется нашим
+       payment_priority (3 уровня, 2 звезды) - оставлять оба рядом только
+       путает: два разных индикатора выглядят как один и тот же. -->
+  <record id="view_purchase_order_form_inherit_payment_priority" model="ir.ui.view">
+    <field name="name">purchase.order.form.inherit.payment.priority</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase.purchase_order_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='priority'][@widget='priority']" position="replace">
+        <field name="payment_priority" widget="priority" class="me-3"
+               groups="purchase.group_purchase_user,purchase_pdf_import.group_chief_buyer"/>
+        <field name="payment_priority" widget="priority" readonly="1" class="me-3"
+               groups="!purchase.group_purchase_user,!purchase_pdf_import.group_chief_buyer"/>
+      </xpath>
+    </field>
+  </record>
+</odoo>

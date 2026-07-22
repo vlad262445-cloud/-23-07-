@@ -1,0 +1,121 @@
+<odoo>
+  <record id="view_warehouse_scrap_request_form" model="ir.ui.view">
+    <field name="name">warehouse.scrap.request.form</field>
+    <field name="model">warehouse.scrap.request</field>
+    <field name="arch" type="xml">
+      <form string="Заявка на списание">
+        <header>
+          <field name="state" widget="statusbar"/>
+          <button name="action_approve" type="object" string="Одобрить" class="btn-primary"
+                  invisible="state != 'to_approve'" groups="purchase.group_purchase_user"/>
+          <button name="action_refuse" type="object" string="Отклонить"
+                  invisible="state != 'to_approve'" groups="purchase.group_purchase_user"/>
+        </header>
+        <sheet>
+          <div class="oe_title">
+            <h1><field name="name" readonly="1"/></h1>
+          </div>
+          <group>
+            <group>
+              <field name="requester_id"/>
+              <field name="source_location_id"/>
+            </group>
+            <group>
+              <field name="product_id"/>
+              <field name="available_quantity" readonly="1"/>
+              <field name="quantity"/>
+            </group>
+          </group>
+          <group string="Причина">
+            <field name="reason" nolabel="1"/>
+          </group>
+          <group string="Причина отклонения" invisible="state == 'approved'">
+            <field name="refuse_reason" nolabel="1" readonly="state == 'refused'"
+                   placeholder="Заполните перед нажатием «Отклонить»"/>
+          </group>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+  <record id="view_warehouse_scrap_request_list" model="ir.ui.view">
+    <field name="name">warehouse.scrap.request.list</field>
+    <field name="model">warehouse.scrap.request</field>
+    <field name="arch" type="xml">
+      <list string="Заявки на списание"
+            decoration-danger="state == 'refused'"
+            decoration-success="state == 'approved'"
+            decoration-warning="state == 'to_approve'">
+        <field name="name"/>
+        <field name="requester_id"/>
+        <field name="source_location_id"/>
+        <field name="product_id"/>
+        <field name="quantity"/>
+        <field name="state" widget="badge"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_warehouse_scrap_request_search" model="ir.ui.view">
+    <field name="name">warehouse.scrap.request.search</field>
+    <field name="model">warehouse.scrap.request</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="name"/>
+        <field name="product_id"/>
+        <field name="requester_id"/>
+        <filter name="to_approve" string="Ожидают решения" domain="[('state', '=', 'to_approve')]"/>
+        <group expand="0" string="Группировать по">
+          <filter name="group_by_state" string="Статус" context="{'group_by': 'state'}"/>
+          <filter name="group_by_requester" string="Заявитель" context="{'group_by': 'requester_id'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_warehouse_scrap_request" model="ir.actions.act_window">
+    <field name="name">Заявки на списание</field>
+    <field name="res_model">warehouse.scrap.request</field>
+    <field name="view_mode">list,form</field>
+    <field name="search_view_id" ref="view_warehouse_scrap_request_search"/>
+    <field name="context">{'search_default_to_approve': 1}</field>
+  </record>
+
+  <menuitem id="menu_warehouse_root"
+            name="Приёмка, списание, склад"
+            sequence="20"/>
+
+  <menuitem id="menu_warehouse_incoming"
+            name="Приёмка"
+            parent="menu_warehouse_root"
+            action="stock.action_picking_tree_incoming"
+            groups="purchase.group_purchase_user,purchase_pdf_import.group_warehouse_keeper"
+            sequence="10"/>
+
+  <!-- Кладовщику это как раз нужнее всего: товар приехал вместе с УПД,
+       он грузит документ и сразу находит нужную приёмку/заказ по составу
+       товаров, не разыскивая её вручную в списке "Приёмка".
+
+       sequence="30", ПОСЛЕ обычных страниц-списков (Заявки на списание,
+       Остатки по ячейкам) - это единственное действие в разделе, которое
+       открывается диалогом (target=new), а не страницей. Если оно окажется
+       первым ВИДИМЫМ пунктом для роли, у которой скрыта "Приёмка" (сейчас
+       это Главный закупщик), клик по самому значку раздела в шапке сразу
+       открывает диалог вместо страницы - тогда вторая панель меню не
+       рендерится, и остальные пункты раздела (например, "Заявки на
+       списание") становятся недостижимы через меню вообще. Обнаружено
+       2026-07-10 при живой проверке аккаунта Владислава Асадуллина. -->
+  <menuitem id="menu_warehouse_updd_import"
+            name="Импорт УПД"
+            parent="menu_warehouse_root"
+            action="purchase_pdf_import.action_purchase_updd_import_wizard"
+            groups="purchase.group_purchase_user,purchase_pdf_import.group_warehouse_keeper,purchase_pdf_import.group_chief_buyer"
+            sequence="30"/>
+
+  <menuitem id="menu_warehouse_scrap_request"
+            name="Заявки на списание"
+            parent="menu_warehouse_root"
+            action="action_warehouse_scrap_request"
+            sequence="20"/>
+</odoo>

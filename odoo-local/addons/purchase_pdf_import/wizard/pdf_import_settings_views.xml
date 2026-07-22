@@ -1,0 +1,34 @@
+<odoo>
+  <record id="view_purchase_pdf_import_settings_form" model="ir.ui.view">
+    <field name="name">purchase.pdf.import.settings.form</field>
+    <field name="model">purchase.pdf.import.settings</field>
+    <field name="arch" type="xml">
+      <form string="Настройки ИИ для импорта PDF">
+        <group string="Подключение к ИИ">
+          <field name="anthropic_api_key" password="True" placeholder="sk-ant-... или ваш кастомный API-ключ"/>
+          <field name="base_url" placeholder="оставьте пустым для Anthropic, или укажите, например, https://your-gateway.example.com/v1"/>
+          <field name="model" placeholder="claude-haiku-4-5 или имя модели вашего шлюза"/>
+        </group>
+        <group string="HTTP-прокси (опционально)">
+          <field name="proxy_host" placeholder="например, 203.0.113.10"/>
+          <field name="proxy_port" placeholder="8080"/>
+          <field name="proxy_login" placeholder="необязательно"/>
+          <field name="proxy_password" password="True" placeholder="необязательно"/>
+          <field name="proxy_required" invisible="not proxy_host"/>
+        </group>
+        <button name="action_test_connection" string="Проверить соединение через прокси" type="object" class="btn-secondary"/>
+        <footer>
+          <button name="action_save" string="Сохранить" type="object" class="btn-primary"/>
+          <button string="Отмена" special="cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_purchase_pdf_import_settings" model="ir.actions.act_window">
+    <field name="name">Настройки импорта PDF</field>
+    <field name="res_model">purchase.pdf.import.settings</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+</odoo>

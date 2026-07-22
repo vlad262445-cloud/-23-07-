@@ -1,0 +1,40 @@
+<odoo>
+  <record id="view_purchase_order_form_inherit_payment" model="ir.ui.view">
+    <field name="name">purchase.order.form.inherit.payment</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase.purchase_order_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//notebook" position="inside">
+        <page string="Платежи" name="payments">
+          <field name="payment_line_ids" readonly="1">
+            <list decoration-success="partner_matched" decoration-danger="not partner_matched">
+              <field name="payment_date" string="Дата"/>
+              <field name="payment_number"/>
+              <field name="amount" sum="Итого"/>
+              <field name="recipient_name"/>
+              <field name="recipient_inn"/>
+              <field name="partner_matched"/>
+            </list>
+          </field>
+        </page>
+        <page string="УПД" name="updd">
+          <field name="updd_line_ids" readonly="1">
+            <list decoration-success="partner_matched" decoration-danger="not partner_matched">
+              <!-- ИИ иногда ошибается при распознавании - кнопка открывает
+                   форму для правки данных этой конкретной строки. -->
+              <button name="action_open_correction_form" type="object" string="Исправить" icon="fa-pencil"
+                      groups="purchase.group_purchase_user,purchase_pdf_import.group_warehouse_keeper,purchase_pdf_import.group_chief_buyer"/>
+              <field name="updd_date" string="Дата"/>
+              <field name="updd_number"/>
+              <field name="amount" sum="Итого"/>
+              <field name="seller_name"/>
+              <field name="seller_inn"/>
+              <field name="partner_matched"/>
+              <field name="attachment_id"/>
+            </list>
+          </field>
+        </page>
+      </xpath>
+    </field>
+  </record>
+</odoo>

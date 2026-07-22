@@ -1,0 +1,23 @@
+<odoo>
+  <record id="view_users_form_inherit_pdf_import" model="ir.ui.view">
+    <field name="name">res.users.form.inherit.pdf.import</field>
+    <field name="model">res.users</field>
+    <field name="inherit_id" ref="base.view_users_form"/>
+    <field name="arch" type="xml">
+      <page name="preferences" position="inside">
+        <group string="Заявки на закупку">
+          <field name="department_id"
+                 help="Если указан - обычный сотрудник (без роли Закупщика/Главного
+                       закупщика) сможет подавать заявки только по этому отделу."/>
+        </group>
+        <group string="Роли">
+          <field name="is_buyer"/>
+          <field name="is_chief_buyer"/>
+          <field name="is_accountant"/>
+          <field name="is_warehouse_keeper"/>
+          <field name="is_observer"/>
+        </group>
+      </page>
+    </field>
+  </record>
+</odoo>

@@ -1,0 +1,10 @@
+# Odoo runtime data (bind-mounted into the container, not source)
+odoo-local/data/
+
+# Production DB dump / filestore / personnel PII — kept locally only, not versioned
+work/db/*.dump
+work/db/*.tar.gz
+work/data/personnel_roster.csv
+
+__pycache__/
+*.pyc

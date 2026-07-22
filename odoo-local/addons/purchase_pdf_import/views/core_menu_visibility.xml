@@ -1,0 +1,28 @@
+<odoo>
+  <!-- Обычный сотрудник (начальник отдела) должен видеть в переключателе
+       приложений только "Заявки на закупку" и "Реестр закупок" - у этих
+       двух своих меню нет ограничения по группам, поэтому ничего менять не
+       нужно. Стандартные приложения Odoo (Обсуждения, Контакты, Панели
+       управления) по умолчанию открыты всем base.group_user, а "Приложения"
+       вообще не ограничены - сужаем их.
+
+       Контакты закупщику нужны (карточки поставщиков), поэтому остаются на
+       группе закупщика. Обсуждения и Панели управления не нужны никому в
+       этой системе (не относятся к закупкам) - сужаем сразу до
+       администратора, а не до закупщика. -->
+  <record id="mail.menu_root_discuss" model="ir.ui.menu">
+    <field name="groups_id" eval="[(6, 0, [ref('base.group_system')])]"/>
+  </record>
+
+  <record id="contacts.menu_contacts" model="ir.ui.menu">
+    <field name="groups_id" eval="[(6, 0, [ref('purchase.group_purchase_user')])]"/>
+  </record>
+
+  <record id="spreadsheet_dashboard.spreadsheet_dashboard_menu_root" model="ir.ui.menu">
+    <field name="groups_id" eval="[(6, 0, [ref('base.group_system')])]"/>
+  </record>
+
+  <record id="base.menu_management" model="ir.ui.menu">
+    <field name="groups_id" eval="[(6, 0, [ref('base.group_system')])]"/>
+  </record>
+</odoo>

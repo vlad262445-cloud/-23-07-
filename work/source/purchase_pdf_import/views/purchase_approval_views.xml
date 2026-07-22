@@ -1,0 +1,122 @@
+<odoo>
+  <record id="view_purchase_order_form_inherit_approval" model="ir.ui.view">
+    <field name="name">purchase.order.form.inherit.approval</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase.purchase_order_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='state'][@widget='statusbar']" position="before">
+        <!-- Порядок этапов зависит от типа оплаты заказа - у каждого варианта
+             свой набор значений в нужном порядке (statusbar_visible не может
+             переставить порядок, только отфильтровать). -->
+        <field name="request_state_full_prepay" widget="statusbar"
+               invisible="not request_state or payment_type not in (False, 'full_prepay')"/>
+        <field name="request_state_split_50_50" widget="statusbar"
+               invisible="not request_state or payment_type != 'split_50_50'"/>
+        <field name="request_state_post_payment" widget="statusbar"
+               invisible="not request_state or payment_type != 'post_payment'"/>
+      </xpath>
+      <!-- Собственный статус-бар заказа Odoo (RFQ/Заказ на покупку/Заблокировано)
+           дублирует и путает рядом с более понятным статусом заявки выше -
+           скрываем его на форме. -->
+      <xpath expr="//field[@name='state'][@widget='statusbar']" position="attributes">
+        <attribute name="invisible">1</attribute>
+      </xpath>
+      <xpath expr="//header" position="inside">
+        <field name="approval_state" invisible="1"/>
+        <button name="action_send_to_approval" type="object" string="Отправить на согласование"
+                class="btn-primary"
+                invisible="not approval_line_ids or approval_state not in ('none', 'declined')"/>
+      </xpath>
+      <xpath expr="//field[@name='partner_ref']" position="after">
+        <field name="cost_analytic_account_id"/>
+        <field name="cost_category_id"/>
+        <field name="payment_type"/>
+        <field name="amount_paid" invisible="not payment_type or payment_type == 'full_prepay'"/>
+      </xpath>
+      <!-- Стандартные кнопки заказа пишут в purchase.order напрямую (не через
+           sudo), а обычный пользователь (заявитель/согласующий) имеет только
+           чтение на эту модель - без ограничения групп клик по любой из них
+           давал бы ошибку доступа. Заказ подтверждается автоматически после
+           согласования всех строк (см. _check_all_approved), поэтому вручную
+           эти кнопки нужны только закупщику. -->
+      <!-- Переименовано и сужено: эта кнопка нужна только когда согласующих
+           вообще нет (заказ создан не из заявки КП, некому становиться
+           согласующим) - тогда это единственный способ подтвердить заказ.
+           Если согласующие есть, использовать нужно "Отправить на
+           согласование" - в этом случае кнопка скрыта, чтобы не путать. -->
+      <xpath expr="//button[@id='draft_confirm']" position="attributes">
+        <attribute name="groups">purchase.group_purchase_user</attribute>
+        <attribute name="string">Пропустить согласование</attribute>
+        <attribute name="invisible">state != 'draft' or approval_line_ids</attribute>
+      </xpath>
+      <xpath expr="//button[@id='bid_confirm']" position="attributes">
+        <attribute name="groups">purchase.group_purchase_user</attribute>
+        <attribute name="string">Пропустить согласование</attribute>
+        <attribute name="invisible">state != 'sent' or approval_line_ids</attribute>
+      </xpath>
+      <xpath expr="//button[@name='button_cancel']" position="attributes">
+        <attribute name="groups">purchase.group_purchase_user</attribute>
+      </xpath>
+      <xpath expr="//button[@name='button_draft']" position="attributes">
+        <attribute name="groups">purchase.group_purchase_user</attribute>
+      </xpath>
+      <xpath expr="//button[@name='button_done']" position="attributes">
+        <attribute name="groups">purchase.group_purchase_user</attribute>
+      </xpath>
+      <!-- "Добавить счёт" создаёт отдельный бухгалтерский документ
+           (account.move), никак не связанный с вашей системой оплат
+           (платёжки + УПД через ИИ) - не используется в этом процессе,
+           скрыта для всех. "Разблокировать" сняло бы блокировку с уже
+           подтверждённого заказа и позволило бы менять позиции/цены даже
+           после оплаты и получения - тоже скрыта для всех. -->
+      <xpath expr="//button[@name='action_create_invoice'][1]" position="attributes">
+        <attribute name="invisible">1</attribute>
+      </xpath>
+      <xpath expr="//button[@name='action_create_invoice'][2]" position="attributes">
+        <attribute name="invisible">1</attribute>
+      </xpath>
+      <xpath expr="//button[@name='button_unlock']" position="attributes">
+        <attribute name="invisible">1</attribute>
+      </xpath>
+      <!-- "Отправить по эл. почте"/"Распечатать Запрос цен" - для отправки
+           RFQ поставщику по email/на бумаге. В вашем процессе не нужны:
+           вы получаете счета ОТ поставщика через ИИ-импорт, а не отправляете
+           запросы цен ЕМУ через Odoo. -->
+      <xpath expr="//button[@name='action_rfq_send'][1]" position="attributes">
+        <attribute name="invisible">1</attribute>
+      </xpath>
+      <xpath expr="//button[@name='action_rfq_send'][2]" position="attributes">
+        <attribute name="invisible">1</attribute>
+      </xpath>
+      <xpath expr="//button[@name='action_rfq_send'][3]" position="attributes">
+        <attribute name="invisible">1</attribute>
+      </xpath>
+      <xpath expr="//button[@name='print_quotation'][1]" position="attributes">
+        <attribute name="invisible">1</attribute>
+      </xpath>
+      <xpath expr="//button[@name='print_quotation'][2]" position="attributes">
+        <attribute name="invisible">1</attribute>
+      </xpath>
+      <xpath expr="//notebook" position="inside">
+        <page string="Согласование" name="approval">
+          <field name="decline_reason" invisible="not decline_reason" readonly="1"/>
+          <field name="approval_line_ids">
+            <list editable="bottom">
+              <field name="sequence" widget="handle"/>
+              <field name="approver_id"/>
+              <field name="state" widget="badge"
+                     decoration-success="state == 'approved'"
+                     decoration-danger="state == 'refused'"/>
+              <field name="decision_date" readonly="1"/>
+              <field name="comment"/>
+              <button name="action_approve" type="object" string="Согласовать" icon="fa-check"
+                      invisible="state != 'pending'"/>
+              <button name="action_refuse" type="object" string="Отклонить" icon="fa-times"
+                      invisible="state != 'pending'"/>
+            </list>
+          </field>
+        </page>
+      </xpath>
+    </field>
+  </record>
+</odoo>

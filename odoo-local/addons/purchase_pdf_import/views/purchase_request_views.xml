@@ -1,0 +1,267 @@
+<odoo>
+  <record id="view_purchase_request_list" model="ir.ui.view">
+    <field name="name">purchase.request.list</field>
+    <field name="model">purchase.request</field>
+    <field name="arch" type="xml">
+      <list decoration-success="state in ('invoice_paid', 'in_stock')"
+            decoration-warning="state in ('in_progress', 'in_transit', 'to_approve', 'approved', 'partial_paid')"
+            decoration-muted="state == 'merged'">
+        <field name="name"/>
+        <field name="requested_by"/>
+        <field name="department_id"/>
+        <field name="items_preview" string="Товары"/>
+        <field name="create_date" string="Создан"/>
+        <!-- Клик по активности в шапке ведёт именно в этот список - без
+             этой колонки человек видел только общие поля заявки, но не то,
+             что именно написано в самой активности (например, "Требуется
+             прикрепить платёжку"), и не понимал, что от него требуется. -->
+        <field name="activity_summary" string="Что нужно сделать"/>
+        <field name="state" widget="badge"
+               decoration-info="state in ('requested', 'invoice_generated')"
+               decoration-warning="state in ('in_progress', 'in_transit', 'to_approve', 'approved', 'partial_paid')"
+               decoration-success="state in ('invoice_paid', 'in_stock')"/>
+        <button name="action_view_details" type="object" string="Детали" icon="fa-eye"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_purchase_request_kanban" model="ir.ui.view">
+    <field name="name">purchase.request.kanban</field>
+    <field name="model">purchase.request</field>
+    <field name="arch" type="xml">
+      <kanban default_group_by="state">
+        <field name="name"/>
+        <field name="requested_by"/>
+        <field name="department_id"/>
+        <field name="items_preview"/>
+        <field name="state"/>
+        <templates>
+          <t t-name="card">
+            <div class="oe_kanban_card oe_kanban_global_click">
+              <strong><field name="name"/></strong>
+              <div><field name="department_id"/> — <field name="requested_by"/></div>
+              <div class="text-muted"><field name="items_preview"/></div>
+            </div>
+          </t>
+        </templates>
+      </kanban>
+    </field>
+  </record>
+
+  <record id="view_purchase_request_form" model="ir.ui.view">
+    <field name="name">purchase.request.form</field>
+    <field name="model">purchase.request</field>
+    <field name="arch" type="xml">
+      <form string="Запрос КП">
+        <header>
+          <field name="payment_type" invisible="1"/>
+          <!-- Порядок этапов в статус-баре зависит от типа оплаты заказа -
+               показываем ровно один из трёх вариантов (у каждого свой набор
+               значений в нужном порядке, см. purchase.request модель -
+               statusbar_visible фильтрует, но не переставляет порядок). -->
+          <field name="state_full_prepay" widget="statusbar"
+                 invisible="payment_type not in (False, 'full_prepay') or state == 'merged'"/>
+          <field name="state_split_50_50" widget="statusbar"
+                 invisible="payment_type != 'split_50_50' or state == 'merged'"/>
+          <field name="state_post_payment" widget="statusbar"
+                 invisible="payment_type != 'post_payment' or state == 'merged'"/>
+          <field name="state" invisible="1"/>
+          <button string="Сохранить" special="save" class="btn-primary"/>
+          <field name="order_approval_state" invisible="1"/>
+          <button name="action_open_pdf_import_wizard" type="object" string="Оформить заказ" class="btn-primary"
+                  invisible="purchase_order_id or state == 'merged'"
+                  groups="purchase.group_purchase_user,purchase_pdf_import.group_chief_buyer"/>
+          <!-- Пока заказ ещё не отправлен на согласование, счёт можно
+               перезагрузить повторно (мастер сам обновит позиции уже
+               созданного заказа вместо создания нового) - нужно, когда ИИ
+               что-то прочитал неверно или поставщик прислал исправленный
+               счёт. После отправки на согласование это уже небезопасно -
+               кто-то мог успеть одобрить прежние цифры (см. action_import
+               в pdf_import_wizard.py). -->
+          <button name="action_open_pdf_import_wizard" type="object" string="Загрузить счёт повторно"
+                  invisible="not purchase_order_id or order_approval_state != 'none'"
+                  groups="purchase.group_purchase_user,purchase_pdf_import.group_chief_buyer"/>
+          <!-- Только пока заказ ещё не оформлен - нет привязки "эта позиция
+               уже попала в конкретный счёт", только "заявка оформлена в
+               заказ или нет", поэтому разделять можно лишь до этого момента
+               (см. action_open_split_wizard). -->
+          <button name="action_open_split_wizard" type="object" string="Разделить заявку"
+                  invisible="purchase_order_id or state == 'merged'"
+                  groups="purchase.group_purchase_user,purchase_pdf_import.group_chief_buyer"/>
+          <button name="action_view_order" type="object" string="Открыть заказ"
+                  invisible="not purchase_order_id"/>
+          <field name="can_arrange_delivery" invisible="1"/>
+          <button name="action_arrange_delivery" type="object" string="Оформить доставку"
+                  groups="purchase.group_purchase_user,purchase_pdf_import.group_chief_buyer"
+                  confirm="Отметить, что доставка согласована и товар в пути?"
+                  invisible="not can_arrange_delivery"/>
+          <!-- Статус заявки продвигается только до "Согласовано" сразу
+               после одобрения (следующий шаг - оплата/получение - сам
+               решает, куда двигать статус дальше), поэтому "ещё не
+               одобрено" проверяем через статус согласования заказа, а не
+               через статус заявки. -->
+          <button name="action_open_payment_import_wizard" type="object" string="Загрузить платёжку"
+                  groups="purchase_pdf_import.group_accountant"
+                  invisible="not purchase_order_id
+                             or order_approval_state == 'to_approve'
+                             or state == 'invoice_paid'"/>
+          <field name="is_unlocked" invisible="1"/>
+          <field name="can_unlock" invisible="1"/>
+          <!-- Заявка блокируется от правок сама, как только появляется
+               заказ (см. write() в purchase_request.py) - эта кнопка снимает
+               блокировку РОВНО на одно следующее сохранение, потом заявка
+               сама блокируется снова. Видна только заявителю/Главному
+               закупщику (can_unlock - per-record, не groups=, потому что
+               "своя ли это заявка" не выразить группой). -->
+          <button name="action_unlock" type="object" string="Разблокировать"
+                  invisible="not purchase_order_id or is_unlocked or not can_unlock"/>
+        </header>
+        <sheet>
+          <widget name="web_ribbon" title="Объединена" invisible="state != 'merged'"/>
+          <div class="alert alert-warning" role="alert"
+               invisible="not is_unlocked">
+            Заявка временно разблокирована - после сохранения правки она снова заблокируется.
+          </div>
+          <div class="oe_button_box" name="button_box">
+            <button name="action_view_related_requests" type="object" class="oe_stat_button"
+                    icon="fa-list-alt" invisible="related_request_count == 0">
+              <field name="related_request_count" widget="statinfo" string="Связанные заявки"/>
+            </button>
+            <!-- Отдельная пара кнопок для семьи "Объединить заявки" - не тот
+                 же related_request_count/"Связанные заявки" выше (это семья
+                 "Разделить заявку"): заявка может быть и разделена, и
+                 объединена одновременно, и тогда две одинаково подписанные
+                 кнопки с разным смыслом запутали бы.
+
+                 groups= здесь обязателен - в отличие от "Объединена в" ниже
+                 (её видит и может открыть только сам автор донора, у него
+                 есть read именно на эту цель через новое ir.rule), эта кнопка
+                 ведёт на СПИСОК чужих донор-заявок - у рядового автора цели
+                 нет read-доступа к чужим заявкам-донорам вообще (только к
+                 своим), так что для него список открылся бы пустым, хотя
+                 счётчик показывает "1" - выглядело бы как баг. Роли ниже уже
+                 и так видят все заявки моделью-широко (см. security XML). -->
+            <button name="action_view_merged_donors" type="object" class="oe_stat_button"
+                    icon="fa-compress" invisible="merged_donor_count == 0"
+                    groups="purchase.group_purchase_user,purchase_pdf_import.group_chief_buyer,purchase_pdf_import.group_observer">
+              <field name="merged_donor_count" widget="statinfo" string="Объединённые заявки"/>
+            </button>
+            <button name="action_view_merge_target" type="object" class="oe_stat_button"
+                    icon="fa-compress" invisible="not merged_into_request_id">
+              <div class="o_stat_info">
+                <span class="o_stat_text">Объединена в</span>
+              </div>
+            </button>
+          </div>
+          <div class="oe_title">
+            <h1><field name="name" readonly="1"/></h1>
+          </div>
+          <group>
+            <group>
+              <!-- Два разных элемента для одного и того же поля: закупщик/
+                   менеджер видят редактируемую версию, все остальные - readonly.
+                   Пробовал сделать это через compute-поле (readonly="..."
+                   завязанный на Boolean-поле) - для НОВЫХ записей Odoo здесь
+                   почему-то никогда не вызывает compute вообще (подтверждено
+                   отладкой 2026-07-10, см. память), поэтому вместо этого - groups=
+                   с отрицанием (!group - явно поддерживаемый Odoo синтаксис,
+                   см. ir_ui_view.py: groups.replace('!', '').split(',')). -->
+              <!-- Главный закупщик - отдельная группа (group_chief_buyer),
+                   она НЕ входит в purchase.group_purchase_user/_manager, поэтому
+                   добавлена явно: в редких случаях он тоже оформляет заявку
+                   "через себя" за другого сотрудника/другой отдел. -->
+              <field name="requested_by" readonly="purchase_order_id and not is_unlocked"
+                     groups="purchase.group_purchase_user,purchase.group_purchase_manager,purchase_pdf_import.group_chief_buyer"/>
+              <field name="requested_by" readonly="1"
+                     groups="!purchase.group_purchase_user,!purchase.group_purchase_manager,!purchase_pdf_import.group_chief_buyer"/>
+              <field name="department_id" readonly="purchase_order_id and not is_unlocked"
+                     groups="purchase.group_purchase_user,purchase.group_purchase_manager,purchase_pdf_import.group_chief_buyer"/>
+              <!-- Наблюдатель - отдельная третья ветка (не в списке выше и не
+                   в отрицании ниже): у него нет одного "домашнего" отдела
+                   (следит за всей компанией сразу), поэтому свободный выбор
+                   отдела нужен именно ему - но ТОЛЬКО в своих заявках, не в
+                   чужих (readonly="requested_by != uid" - это обычное
+                   выражение над сохранённым полем + контекстной uid, а не
+                   compute, поэтому оно надёжно работает и для новых записей
+                   тоже, в отличие от старого compute-based подхода). Без
+                   этой развилки поле выглядело редактируемым и на ЧУЖИХ
+                   заявках тоже (сама запись всё равно блокируется ir.rule
+                   на сервере, но вид вводил в заблуждение - обнаружено
+                   2026-07-14, Боровик). -->
+              <field name="department_id"
+                     readonly="requested_by != uid or (purchase_order_id and not is_unlocked)"
+                     groups="purchase_pdf_import.group_observer"/>
+              <field name="department_id" readonly="1"
+                     groups="!purchase.group_purchase_user,!purchase.group_purchase_manager,!purchase_pdf_import.group_chief_buyer,!purchase_pdf_import.group_observer"/>
+              <field name="desired_date" readonly="purchase_order_id and not is_unlocked"/>
+            </group>
+            <group>
+              <field name="cost_code" placeholder="Если знаете - укажите, если нет - оставьте пустым"
+                     readonly="purchase_order_id and not is_unlocked"/>
+              <field name="purchase_order_id" readonly="1" invisible="not purchase_order_id"/>
+            </group>
+          </group>
+          <notebook>
+            <page string="Позиции">
+              <field name="line_ids" readonly="purchase_order_id and not is_unlocked">
+                <list editable="bottom">
+                  <field name="name"/>
+                  <field name="spec"/>
+                  <field name="product_qty"/>
+                  <field name="uom_label"/>
+                  <field name="note"/>
+                  <field name="product_code"/>
+                </list>
+              </field>
+            </page>
+            <page string="Комментарий">
+              <field name="note" readonly="purchase_order_id and not is_unlocked"/>
+            </page>
+          </notebook>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+  <record id="view_purchase_request_search" model="ir.ui.view">
+    <field name="name">purchase.request.search</field>
+    <field name="model">purchase.request</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="name"/>
+        <field name="requested_by"/>
+        <field name="department_id"/>
+        <filter name="my_requests" string="Мои запросы" domain="[('requested_by', '=', uid)]"/>
+        <!-- "Мои запросы" - это "кто подал", а не "у кого сейчас очередь
+             действовать" - для Ольги обычно совпадает (она чаще всего сама
+             и заявитель, и тот, кому потом писать активность), но для
+             остальных ролей это разные вещи, поэтому нужен отдельный
+             фильтр именно по назначенной активности. -->
+        <filter name="my_pending_action" string="Требуется от меня" domain="[('activity_ids.user_id', '=', uid)]"/>
+        <group expand="0" string="Группировать по">
+          <filter name="group_by_state" string="Статус" context="{'group_by': 'state'}"/>
+          <filter name="group_by_department" string="Отдел/участок" context="{'group_by': 'department_id'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_purchase_request" model="ir.actions.act_window">
+    <field name="name">Заявки на закупку</field>
+    <field name="res_model">purchase.request</field>
+    <field name="view_mode">list,kanban,form</field>
+    <field name="search_view_id" ref="view_purchase_request_search"/>
+    <field name="context">{'search_default_my_requests': 0}</field>
+  </record>
+
+  <menuitem id="menu_purchase_request_root"
+            name="Заявки на закупку"
+            sequence="5"/>
+
+  <menuitem id="menu_purchase_request"
+            name="Заявки на закупку"
+            parent="menu_purchase_request_root"
+            action="action_purchase_request"
+            sequence="1"/>
+</odoo>

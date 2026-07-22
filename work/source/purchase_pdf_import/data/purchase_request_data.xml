@@ -1,0 +1,39 @@
+<odoo>
+  <record id="seq_purchase_request" model="ir.sequence">
+    <field name="name">Запрос КП</field>
+    <field name="code">purchase.request</field>
+    <field name="prefix">ЗКП</field>
+    <field name="padding">5</field>
+    <field name="company_id" eval="False"/>
+  </record>
+
+  <record id="seq_warehouse_scrap_request" model="ir.sequence">
+    <field name="name">Заявка на списание</field>
+    <field name="code">warehouse.scrap.request</field>
+    <field name="prefix">СП</field>
+    <field name="padding">5</field>
+    <field name="company_id" eval="False"/>
+  </record>
+
+  <!-- На сервере нет исходящего почтового сервера (осознанно, см. коммит про
+       скрытие "Отправить сообщение"). Сначала казалось, что дело в
+       res.users.notification_type='email' по умолчанию у новых пользователей -
+       поправил его на 'inbox' и здесь, и вручную для существующих через
+       shell, но это НЕ было настоящей причиной: "Подтвердить оплату" у
+       Гибиевой С.Ю. всё равно падало с "Настройте email-адрес отправителя".
+       Настоящая причина - у новых пользователей (Асадуллин/Боровик/Гибиева)
+       было заполнено только login, а res.users.email оставался пустым;
+       Odoo НЕ выводит email из login самостоятельно. message_post() внутри
+       action_confirm() (платёжка/УПД) требует email именно у АВТОРА
+       сообщения, а не у получателя - без него падает и обрывает саму
+       бизнес-операцию, а не только кнопку в переписке. Настоящий фикс -
+       вручную проставленный email для этих 3 пользователей через shell в ту
+       же сессию 2026-07-10; при создании любого нового сотрудника email
+       нужно задавать явно, помимо login. inbox-default по notification_type
+       оставлен как дополнительная защита (на случай реального почтового
+       сервера в будущем), но сам по себе эту ошибку не чинит. -->
+  <record id="default_user_notification_inbox" model="ir.default">
+    <field name="field_id" search="[('model', '=', 'res.users'), ('name', '=', 'notification_type')]"/>
+    <field name="json_value">"inbox"</field>
+  </record>
+</odoo>
