@@ -56,7 +56,7 @@
            будущих pivot/graph в модуле 6), просто больше не выводится сам
            по себе отдельной колонкой в реестре. -->
       <field name="state" position="before">
-        <field name="lifecycle_stage" widget="lifecycle_steps" string="Этап" nolabel="1"/>
+        <field name="lifecycle_stage" widget="lifecycle_steps" string="Этап"/>
         <field name="lifecycle_stage" widget="badge" string="Этап (текстом)" optional="hide"
                decoration-info="lifecycle_stage == 'draft'"
                decoration-warning="lifecycle_stage in ('to_approve', 'approved', 'prepaid', 'in_transit')"
@@ -74,12 +74,17 @@
         <attribute name="optional">hide</attribute>
       </field>
 
-      <!-- Короткий ярлык вместо длинной фразы по умолчанию (п. 2.2). Длинный
-           pending_action_note остаётся как есть, только уходит в
-           optional="hide" - используется в других местах, не трогаем сам
-           метод его вычисления. -->
+      <!-- pending_action_short теперь показывается прямо в колонке "Этап"
+           (виджет lifecycle_steps читает его через fieldDependencies -
+           см. static/src/js/lifecycle_steps_field.js) - отдельная видимая
+           колонка "Что требуется" больше не нужна по умолчанию (отзыв
+           пользователя 2026-07-23: "убьём двух зайцев одним виджетом").
+           Поле и текстовая колонка остаются - optional="hide", для тех, кому
+           нужен именно текст/экспорт, а не сегменты. Длинный
+           pending_action_note - туда же, как и раньше, метод его вычисления
+           не трогаем. -->
       <field name="pending_action_note" position="before">
-        <field name="pending_action_short" widget="badge" string="Что требуется"
+        <field name="pending_action_short" widget="badge" string="Что требуется" optional="hide"
                decoration-danger="pending_action_short == 'declined'"
                decoration-warning="pending_action_short in ('pay', 'surcharge', 'fill_fields', 'upload_updd', 'arrange_delivery')"
                decoration-info="pending_action_short == 'to_approve'"

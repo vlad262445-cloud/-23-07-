@@ -9,6 +9,10 @@ import { Component } from "@odoo/owl";
 // закупки" - заменено на ту же идею, что уже есть и нравится пользователю
 // в statusbar на форме заявки: серые ещё не пройденные этапы, зелёные
 // пройденные, текущий - выделен отдельным цветом.
+//
+// По второму отзыву (тот же день) - рядом с сегментами выводится короткая
+// подпись из pending_action_short ("Оплатить" и т.п.), чтобы не заводить
+// для неё отдельную колонку "Что требуется" - две задачи одним виджетом.
 const STEPS = [
     ["draft", "Черновик"],
     ["to_approve", "На согласовании"],
@@ -23,6 +27,14 @@ const OFF_TRACK_LABELS = {
     declined: "Отклонена",
     cancel: "Отменена",
 };
+// Тот же смысл, что и decoration-* в pending_action_short раньше - если
+// требуется что-то реальное от человека, подпись оранжевая, "Отклонена"
+// красная, "нечего делать" - зелёная (см. house-палитра, skill odoo-ui).
+const ACTION_COLOR_CLASS = {
+    declined: "text-bg-danger",
+    none: "text-bg-success",
+};
+const DEFAULT_ACTION_COLOR_CLASS = "text-bg-warning";
 
 export class LifecycleStepsField extends Component {
     static template = "purchase_registry_ux.LifecycleSteps";
@@ -53,9 +65,24 @@ export class LifecycleStepsField extends Component {
         }
         return "o_lifecycle_step_todo";
     }
+
+    get actionValue() {
+        return this.props.record.data.pending_action_short;
+    }
+
+    get actionLabel() {
+        const selection = this.props.record.fields.pending_action_short.selection;
+        const found = selection.find(([value]) => value === this.actionValue);
+        return found ? found[1] : "";
+    }
+
+    get actionColorClass() {
+        return ACTION_COLOR_CLASS[this.actionValue] || DEFAULT_ACTION_COLOR_CLASS;
+    }
 }
 
 registry.category("fields").add("lifecycle_steps", {
     component: LifecycleStepsField,
     supportedTypes: ["selection"],
+    fieldDependencies: [{ name: "pending_action_short", type: "selection" }],
 });

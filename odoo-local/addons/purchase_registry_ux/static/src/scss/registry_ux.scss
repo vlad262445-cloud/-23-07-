@@ -2,21 +2,26 @@
 // "вся шапка плывёт" (скриншоты пользователя 2026-07-23).
 //
 // НАСТОЯЩАЯ причина (см. NOTES.md за полным разбором): шеврон рендерился
-// отдельной <td>-колонкой без соответствующего <th> в шапке. Odoo меряет и
-// замораживает ширины колонок по нескольким МАССИВАМ, которые должны идти
-// строго синхронно по позиции (headers из DOM, state.columns из вьюхи,
-// hasSelectors/columnOffset) - см. web/static/src/views/list/
-// column_width_hook.js. Лишняя, никому не известная колонка сдвигает эту
-// синхронизацию, и Odoo начинает применять чужие min/max-ширины не к тем
-// колонкам. Настоящий фикс - в registry_list_renderer.xml (шеврон переехал
-// внутрь существующей ячейки поля "name", отдельная колонка убрана).
-//
-// scrollbar-gutter ниже - оставлен как защита по мелочи (не мешает), но
-// не был причиной бага.
+// отдельной <td>-колонкой без соответствующего <th> в шапке - исправлено
+// в registry_list_renderer.xml (шеврон переехал внутрь ячейки поля
+// "name"). scrollbar-gutter/overflow-y ниже - дополнительная защита от
+// остаточного, более мелкого сдвига колонок при появлении/исчезновении
+// вертикальной прокрутки .o_content (см. webclient_layout.scss в самом
+// Odoo - это единственный реально скроллящийся родитель списка на
+// десктопе). overflow-y: scroll - более старый и однозначно надёжный
+// приём (полоса прокрутки зарезервирована ВСЕГДА, а не "когда браузер
+// решит"), добавлен вместе с scrollbar-gutter, а не вместо него.
 html,
 .o_content,
 .o_list_renderer {
     scrollbar-gutter: stable;
+}
+// !important обязателен - core Odoo задаёт overflow (и overflow-y через
+// него) на .o_web_client > .o_action_manager > .o_action .o_content,
+// у этой цепочки специфичность выше, чем у простого .o_action .o_content -
+// без !important правило ниже проиграет каскад и ничего не даст.
+.o_action .o_content {
+    overflow-y: scroll !important;
 }
 
 .o_purchase_registry_expand_toggle {
@@ -30,21 +35,40 @@ html,
 
 .o_purchase_registry_expand_row {
     > td {
-        // overflow-x: auto - если сумма пришла на очень узком экране,
-        // прокрутка появится только у самого блока, а не у всей таблицы.
         overflow-x: auto;
     }
 
+    // Отзыв 2026-07-23: "информация номенклатуры размазывается по всей
+    // таблице" - раньше вложенная таблица была на width: 100% от строки
+    // реестра (а строка реестра широкая, раз в ней 10+ обычных колонок) -
+    // из-за этого 4 узкие колонки (Наименование/Кол-во/Цена/Сумма)
+    // раздвигались на весь экран. Теперь - разумный max-width, естественная
+    // раскладка колонок по содержимому вместо жёстких 50/50.
+    .o_purchase_registry_expand_content {
+        max-width: 800px;
+    }
+
     table {
-        table-layout: fixed;
-        width: 100%;
+        width: auto;
+        max-width: 100%;
+
+        td, th {
+            padding-right: 16px;
+        }
 
         th:first-child,
         td:first-child {
-            width: 50%;
+            min-width: 260px;
             word-break: break-word;
         }
     }
+}
+
+.o_lifecycle_steps_wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
 }
 
 .o_lifecycle_steps {
@@ -69,4 +93,8 @@ html,
 .o_lifecycle_step_current {
     background-color: var(--o-lifecycle-step-current-bg, #f0ad4e);
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+.o_lifecycle_action_label {
+    white-space: nowrap;
 }

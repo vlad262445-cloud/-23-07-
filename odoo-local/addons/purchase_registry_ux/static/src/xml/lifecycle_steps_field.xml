@@ -2,13 +2,17 @@
 <templates xml:space="preserve">
 
     <t t-name="purchase_registry_ux.LifecycleSteps">
-        <span t-if="offTrackLabel" class="badge rounded-pill"
-              t-attf-class="text-bg-{{ stage == 'declined' ? 'danger' : '300' }}"
-              t-esc="offTrackLabel"/>
-        <div t-else="" class="o_lifecycle_steps" t-att-title="steps[currentIndex] and steps[currentIndex][1]">
-            <t t-foreach="steps" t-as="step" t-key="step[0]">
-                <span t-attf-class="o_lifecycle_step {{ stepClass(step_index) }}" t-att-title="step[1]"/>
-            </t>
+        <div class="o_lifecycle_steps_wrapper">
+            <span t-if="offTrackLabel" class="badge rounded-pill"
+                  t-attf-class="text-bg-{{ stage == 'declined' ? 'danger' : '300' }}"
+                  t-esc="offTrackLabel"/>
+            <div t-else="" class="o_lifecycle_steps" t-att-title="steps[currentIndex] and steps[currentIndex][1]">
+                <t t-foreach="steps" t-as="step" t-key="step[0]">
+                    <span t-attf-class="o_lifecycle_step {{ stepClass(step_index) }}" t-att-title="step[1]"/>
+                </t>
+            </div>
+            <span t-if="actionLabel" class="badge rounded-pill o_lifecycle_action_label"
+                  t-attf-class="{{ actionColorClass }}" t-esc="actionLabel"/>
         </div>
     </t>
 

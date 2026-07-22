@@ -29,6 +29,7 @@
             <tr t-if="isRegistryRowExpanded(record)" class="o_purchase_registry_expand_row">
                 <td t-att-colspan="nbCols" class="p-0">
                     <div class="p-2 bg-light border-top border-bottom">
+                        <div class="o_purchase_registry_expand_content">
                         <div t-if="record.data.registry_expand_data and record.data.registry_expand_data.partner_ref">
                             <strong>№ счёта поставщика:</strong>
                             <t t-esc="record.data.registry_expand_data.partner_ref"/>
@@ -62,6 +63,7 @@
                                 </tr>
                             </tfoot>
                         </table>
+                        </div>
                     </div>
                 </td>
             </tr>
