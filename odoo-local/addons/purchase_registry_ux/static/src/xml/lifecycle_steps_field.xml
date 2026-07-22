@@ -8,9 +8,14 @@
                   t-esc="offTrackLabel"/>
             <div t-else="" class="o_lifecycle_steps" t-att-title="steps[currentIndex] and steps[currentIndex][1]">
                 <t t-foreach="steps" t-as="step" t-key="step[0]">
-                    <span t-attf-class="o_lifecycle_step {{ stepClass(step_index) }}" t-att-title="step[1]"/>
+                    <i t-att-class="stepIconClass(step_index)" t-att-title="step[1]"/>
                 </t>
             </div>
+            <!-- Стрелка визуально связывает "путь" с бейджем действия справа -
+                 иначе бейдж выглядит подвешенным отдельно от сегментов (отзыв
+                 пользователя 2026-07-23). Заголовок колонки тоже уточнён -
+                 см. purchase_registry_views.xml ("Этап / Что делать"). -->
+            <i t-if="actionLabel" class="fa fa-long-arrow-right o_lifecycle_action_arrow"/>
             <span t-if="actionLabel" class="badge rounded-pill o_lifecycle_action_label"
                   t-attf-class="{{ actionColorClass }}" t-esc="actionLabel"/>
         </div>

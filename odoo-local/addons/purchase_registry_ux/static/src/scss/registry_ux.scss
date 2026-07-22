@@ -74,25 +74,31 @@ html,
 .o_lifecycle_steps {
     display: inline-flex;
     align-items: center;
-    gap: 2px;
+    gap: 4px;
     vertical-align: middle;
 }
 
+// Иконки вместо голых прямоугольников (отзыв 2026-07-23: "подбери для
+// каждого этапа простую но интуитивно понятную иконку"). Раскраска -
+// та же логика, что и раньше (серый/жёлтый/зелёный), только через color
+// вместо background-color.
 .o_lifecycle_step {
-    display: inline-block;
-    width: 14px;
-    height: 7px;
-    border-radius: 3px;
-    background-color: var(--o-lifecycle-step-todo-bg, #dee2e6);
+    font-size: 13px;
+    line-height: 1;
+    color: var(--o-lifecycle-step-todo-color, #ced4da);
 }
 
 .o_lifecycle_step_done {
-    background-color: var(--o-lifecycle-step-done-bg, #28a745);
+    color: var(--o-lifecycle-step-done-color, #28a745);
 }
 
 .o_lifecycle_step_current {
-    background-color: var(--o-lifecycle-step-current-bg, #f0ad4e);
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+    color: var(--o-lifecycle-step-current-color, #d9930d);
+}
+
+.o_lifecycle_action_arrow {
+    color: var(--bs-secondary-color, #adb5bd);
+    font-size: 12px;
 }
 
 .o_lifecycle_action_label {

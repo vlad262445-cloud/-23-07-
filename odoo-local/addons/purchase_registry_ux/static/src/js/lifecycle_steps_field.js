@@ -13,14 +13,19 @@ import { Component } from "@odoo/owl";
 // По второму отзыву (тот же день) - рядом с сегментами выводится короткая
 // подпись из pending_action_short ("Оплатить" и т.п.), чтобы не заводить
 // для неё отдельную колонку "Что требуется" - две задачи одним виджетом.
+//
+// По третьему отзыву - вместо голых прямоугольников теперь по одной
+// простой иконке на этап (та же тройная раскраска: серый/жёлтый/зелёный).
+// Иконки - из штатного набора FontAwesome 4.7, который уже используется
+// во всём проекте (см. odoo-ui), новых шрифтов/картинок не добавляли.
 const STEPS = [
-    ["draft", "Черновик"],
-    ["to_approve", "На согласовании"],
-    ["approved", "Согласовано"],
-    ["prepaid", "Предоплачено"],
-    ["in_transit", "В пути"],
-    ["in_stock", "На складе"],
-    ["completed", "Завершена"],
+    ["draft", "Черновик", "fa-file-text-o"],
+    ["to_approve", "На согласовании", "fa-hourglass-half"],
+    ["approved", "Согласовано", "fa-thumbs-o-up"],
+    ["prepaid", "Предоплачено", "fa-credit-card"],
+    ["in_transit", "В пути", "fa-truck"],
+    ["in_stock", "На складе", "fa-archive"],
+    ["completed", "Завершена", "fa-flag-checkered"],
 ];
 const STEP_INDEX = Object.fromEntries(STEPS.map(([key], index) => [key, index]));
 const OFF_TRACK_LABELS = {
@@ -64,6 +69,10 @@ export class LifecycleStepsField extends Component {
             return "o_lifecycle_step_current";
         }
         return "o_lifecycle_step_todo";
+    }
+
+    stepIconClass(index) {
+        return `fa ${this.steps[index][2]} o_lifecycle_step ${this.stepClass(index)}`;
     }
 
     get actionValue() {
