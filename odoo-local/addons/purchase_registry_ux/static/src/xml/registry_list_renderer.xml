@@ -7,12 +7,22 @@
          js_class в registry_list_renderer.js и п. 2.1 ТЗ). -->
     <t t-name="purchase_registry_ux.RecordRow" t-inherit="web.ListRenderer.RecordRow" t-inherit-mode="primary">
 
-        <xpath expr="//td[hasclass('o_list_record_selector')]" position="before">
-            <td class="o_purchase_registry_expand_toggle text-center cursor-pointer"
-                tabindex="-1"
-                t-on-click.stop="() => this.toggleRegistryRowExpand(record)">
+        <!-- ВАЖНО: не добавляем отдельную колонку под шеврон - лишний <td>
+             без соответствующего <th> в шапке ломает индексацию, на которой
+             держится вся система заморозки ширин колонок Odoo (nbCols,
+             columnOffset в column_width_hook.js считают "выделение,
+             колонки, кнопки" строго по позиции, ничего не зная про наш
+             самодельный столбец). Именно это было настоящей причиной
+             "плывущей шапки" (см. NOTES.md) - не скроллбар, как думали
+             сначала. Шеврон вместо этого рендерится ВНУТРИ уже
+             существующей ячейки поля "name" (№ закупки, оно же первая
+             видимая колонка данных), количество колонок не меняется. -->
+        <xpath expr="//t[@t-if='!isInvisible']" position="before">
+            <span t-if="column.name == 'name'"
+                  class="o_purchase_registry_expand_toggle cursor-pointer"
+                  t-on-click.stop="() => this.toggleRegistryRowExpand(record)">
                 <i t-att-class="isRegistryRowExpanded(record) ? 'fa fa-chevron-down' : 'fa fa-chevron-right'"/>
-            </td>
+            </span>
         </xpath>
 
         <xpath expr="//tr[hasclass('o_data_row')]" position="after">
