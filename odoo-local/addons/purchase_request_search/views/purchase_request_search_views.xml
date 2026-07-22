@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_purchase_request_search_inherit" model="ir.ui.view">
+    <field name="name">purchase.request.search.inherit.vendor.matching.tz</field>
+    <field name="model">purchase.request</field>
+    <field name="inherit_id" ref="purchase_pdf_import.view_purchase_request_search"/>
+    <field name="arch" type="xml">
+
+      <!-- Позиции заявки - это purchase.request.line, текстовые поля без
+           привязки к товарному каталогу (см. CHANGELOG purchase_pdf_import
+           2026-07-07), поэтому ищем по названию/коду/спецификации/примечанию,
+           а не по product_id, как в реестре закупок. -->
+      <field name="department_id" position="after">
+        <field name="line_ids" string="Номенклатура"
+               filter_domain="['|', '|', '|',
+                               ('line_ids.name', 'ilike', self),
+                               ('line_ids.product_code', 'ilike', self),
+                               ('line_ids.spec', 'ilike', self),
+                               ('line_ids.note', 'ilike', self)]"/>
+      </field>
+
+      <filter name="my_pending_action" position="after">
+        <filter name="filter_no_order" string="Без заказа"
+                domain="[('purchase_order_id', '=', False)]"/>
+        <filter name="filter_desired_date_overdue" string="Просрочена желаемая дата"
+                domain="[('desired_date', '&lt;', context_today().strftime('%Y-%m-%d')),
+                         ('state', 'not in', ['in_stock', 'merged'])]"/>
+      </filter>
+
+      <filter name="group_by_department" position="after">
+        <filter name="group_by_requested_by" string="Заявитель"
+                context="{'group_by': 'requested_by'}"/>
+      </filter>
+
+    </field>
+  </record>
+</odoo>
