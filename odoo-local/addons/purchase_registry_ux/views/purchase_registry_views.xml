@@ -78,13 +78,14 @@
       <!-- Отзыв 2026-07-23: "в заказе есть Крайний срок и Ожидаемая дата
            прибытия, сделай чтобы их можно было добавить в колонки" - это
            нативные поля purchase.order (date_order/date_planned), уже
-           заполняются самим Odoo/purchase_stock - ничего вычислять не
-           нужно, только показать в реестре. widget="date" - чтобы не
-           показывать время, эти поля технически datetime, но по смыслу
-           это даты. -->
+           заполняются самим Odoo/purchase_stock. Показаны через
+           deadline_date/planned_arrival_date (compute, Date) - у обоих
+           нативных полей тип datetime, а widget="date" Odoo тихо
+           игнорирует на несовпадающем типе (см. models/purchase_order.py) -
+           поэтому именно так, а не просто виджетом поверх исходных полей. -->
       <field name="user_id" position="before">
-        <field name="date_order" string="Крайний срок" widget="date" optional="hide"/>
-        <field name="date_planned" string="Ожидаемое прибытие" widget="date" optional="hide"/>
+        <field name="deadline_date" optional="hide"/>
+        <field name="planned_arrival_date" optional="hide"/>
       </field>
       <field name="approval_state" position="attributes">
         <attribute name="optional">hide</attribute>

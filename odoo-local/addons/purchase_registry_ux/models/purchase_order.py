@@ -181,6 +181,25 @@ class PurchaseOrder(models.Model):
         for order in self:
             order.expected_arrival_date = order.request_ids[:1].desired_date
 
+    # Отзыв пользователя 2026-07-23: "уберите время, оставьте только дату"
+    # для нативных date_order/date_planned. Оба технически datetime
+    # (несут время), а widget="date" во вьюхе на самом деле не работает на
+    # поле типа datetime - виджет "date" в самом Odoo объявлен только с
+    # supportedTypes: ["date"] (см. web/static/src/views/fields/datetime/
+    # datetime_field.js), поэтому Odoo тихо игнорирует widget="date" и всё
+    # равно рендерит datetime-виджет со временем. Единственный надёжный
+    # способ показать только дату - завести настоящие Date-поля.
+    deadline_date = fields.Date(
+        compute='_compute_date_only_fields', string='Крайний срок')
+    planned_arrival_date = fields.Date(
+        compute='_compute_date_only_fields', string='Ожидаемое прибытие')
+
+    @api.depends('date_order', 'date_planned')
+    def _compute_date_only_fields(self):
+        for order in self:
+            order.deadline_date = order.date_order.date() if order.date_order else False
+            order.planned_arrival_date = order.date_planned.date() if order.date_planned else False
+
     # is_completed (из purchase_order_archive) в зависимостях не участвует -
     # его вообще может не быть на модели, если тот модуль не установлен
     # (модули 1-5 внедряются независимо, см. п. 11.1 ТЗ), а @api.depends

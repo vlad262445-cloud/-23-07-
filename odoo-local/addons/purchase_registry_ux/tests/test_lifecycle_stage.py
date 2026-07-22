@@ -202,3 +202,47 @@ class TestExpectedArrivalDate(TransactionCase):
     def test_empty_without_any_request(self):
         order = self._make_order()
         self.assertFalse(order.expected_arrival_date)
+
+
+@tagged('post_install', '-at_install')
+class TestDateOnlyFields(TransactionCase):
+    """deadline_date/planned_arrival_date - отзыв 2026-07-23: "уберите время,
+    оставьте только дату". date_order/date_planned нативные и технически
+    datetime - widget="date" во вьюхе на них не работает (Odoo игнорирует
+    widget с несовпадающим типом), поэтому есть настоящие Date-поля поверх
+    них."""
+
+    def setUp(self):
+        super().setUp()
+        self.partner = self.env['res.partner'].create({
+            'name': 'Test Date Only Vendor', 'vat': '7800000008',
+        })
+        self.product = self.env['product.product'].create({'name': 'Test Date Only Product'})
+
+    def test_deadline_and_planned_arrival_strip_time(self):
+        order = self.env['purchase.order'].create({
+            'partner_id': self.partner.id,
+            'date_order': '2026-08-15 14:32:07',
+            'date_planned': '2026-09-01 09:00:00',
+            'order_line': [(0, 0, {
+                'product_id': self.product.id, 'name': self.product.name,
+                'product_qty': 1, 'product_uom': self.product.uom_id.id, 'price_unit': 100.0,
+            })],
+        })
+        self.assertEqual(str(order.deadline_date), '2026-08-15')
+        self.assertEqual(str(order.planned_arrival_date), '2026-09-01')
+
+    def test_empty_planned_arrival_when_not_set(self):
+        # date_order имеет default=now() в базовом Odoo, но date_planned -
+        # нет, поэтому именно на нём легко проверить пустую ветку без риска
+        # напороться на скрытый default.
+        order = self.env['purchase.order'].create({
+            'partner_id': self.partner.id,
+            'order_line': [(0, 0, {
+                'product_id': self.product.id, 'name': self.product.name,
+                'product_qty': 1, 'product_uom': self.product.uom_id.id, 'price_unit': 100.0,
+            })],
+        })
+        order.date_planned = False
+        order._compute_date_only_fields()
+        self.assertFalse(order.planned_arrival_date)
