@@ -1,4 +1,5 @@
 from odoo import api, fields, models
+from odoo.tools.misc import format_date
 
 # Ключ -> короткая подпись (widget="badge"/строковая колонка). Порядок здесь
 # не влияет на выбор - только на порядок значений в выпадающем списке.
@@ -40,6 +41,7 @@ class PurchaseOrder(models.Model):
     @api.depends(
         'partner_ref', 'amount_total', 'partner_id.name',
         'cost_analytic_account_id.name', 'cost_category_id.name',
+        'expected_arrival_date',
         'order_line.name', 'order_line.product_qty', 'order_line.price_unit',
         'order_line.price_subtotal')
     def _compute_registry_expand_data(self):
@@ -54,6 +56,9 @@ class PurchaseOrder(models.Model):
                 'partner_name': order.partner_id.name or '',
                 'cost_analytic_name': order.cost_analytic_account_id.name or '',
                 'cost_category_name': order.cost_category_id.name or '',
+                'expected_arrival_date': (
+                    format_date(self.env, order.expected_arrival_date)
+                    if order.expected_arrival_date else ''),
                 'lines': [{
                     'name': line.name,
                     'qty': line.product_qty,
@@ -159,6 +164,22 @@ class PurchaseOrder(models.Model):
     lifecycle_stage = fields.Selection(
         LIFECYCLE_STAGES, compute='_compute_lifecycle_stage', store=True)
     lifecycle_progress = fields.Integer(compute='_compute_lifecycle_stage', store=True)
+
+    # Отзыв пользователя 2026-07-23: "должна быть возможность увидеть
+    # ориентировочную дату прибытия" рядом со шкалой этапов. На заказе
+    # такого поля не было вообще - только "Желательная дата" на заявке
+    # (purchase.request.desired_date, то, что изначально попросил
+    # заявитель). Тот же паттерн, что уже есть в базовом модуле для
+    # requester_id (order.request_ids[:1].requested_by) - берём с первой
+    # связанной заявки.
+    expected_arrival_date = fields.Date(
+        compute='_compute_expected_arrival_date', store=True,
+        string='Ориентировочная дата прибытия')
+
+    @api.depends('request_ids.desired_date')
+    def _compute_expected_arrival_date(self):
+        for order in self:
+            order.expected_arrival_date = order.request_ids[:1].desired_date
 
     # is_completed (из purchase_order_archive) в зависимостях не участвует -
     # его вообще может не быть на модели, если тот модуль не установлен

@@ -154,3 +154,51 @@ class TestLifecycleStage(TransactionCase):
 
         self._assert_monotonic(progress)
         self._maybe_check_completed(order, request)
+
+
+@tagged('post_install', '-at_install')
+class TestExpectedArrivalDate(TransactionCase):
+    """expected_arrival_date - отзыв пользователя 2026-07-23: "должна быть
+    возможность увидеть ориентировочную дату прибытия". Берётся с первой
+    связанной заявки (order.request_ids[:1].desired_date), тот же паттерн,
+    что уже есть в базовом модуле для requester_id."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.partner = cls.env['res.partner'].create({
+            'name': 'Test Arrival Vendor', 'vat': '7800000007',
+        })
+        cls.product = cls.env['product.product'].create({'name': 'Test Arrival Product'})
+
+    def _make_order(self):
+        return self.env['purchase.order'].create({
+            'partner_id': self.partner.id,
+            'order_line': [(0, 0, {
+                'product_id': self.product.id, 'name': self.product.name,
+                'product_qty': 1, 'product_uom': self.product.uom_id.id, 'price_unit': 100.0,
+            })],
+        })
+
+    def test_mirrors_first_request_desired_date(self):
+        order = self._make_order()
+        self.env['purchase.request'].create({
+            'purchase_order_id': order.id,
+            'desired_date': '2026-08-15',
+            'line_ids': [(0, 0, {'name': self.product.name, 'product_qty': 1})],
+        })
+        order.invalidate_recordset()
+        self.assertEqual(str(order.expected_arrival_date), '2026-08-15')
+
+    def test_empty_without_desired_date(self):
+        order = self._make_order()
+        self.env['purchase.request'].create({
+            'purchase_order_id': order.id,
+            'line_ids': [(0, 0, {'name': self.product.name, 'product_qty': 1})],
+        })
+        order.invalidate_recordset()
+        self.assertFalse(order.expected_arrival_date)
+
+    def test_empty_without_any_request(self):
+        order = self._make_order()
+        self.assertFalse(order.expected_arrival_date)

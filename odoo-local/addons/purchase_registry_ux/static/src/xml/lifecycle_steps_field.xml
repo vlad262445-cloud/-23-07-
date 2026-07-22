@@ -6,7 +6,7 @@
             <span t-if="offTrackLabel" class="badge rounded-pill"
                   t-attf-class="text-bg-{{ stage == 'declined' ? 'danger' : '300' }}"
                   t-esc="offTrackLabel"/>
-            <div t-else="" class="o_lifecycle_steps" t-att-title="steps[currentIndex] and steps[currentIndex][1]">
+            <div t-else="" class="o_lifecycle_steps" t-att-title="wrapperTitle">
                 <t t-foreach="steps" t-as="step" t-key="step[0]">
                     <i t-att-class="stepIconClass(step_index)" t-att-title="step[1]"/>
                 </t>

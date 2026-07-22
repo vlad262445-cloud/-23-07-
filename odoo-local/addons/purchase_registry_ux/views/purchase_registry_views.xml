@@ -63,6 +63,12 @@
                decoration-success="lifecycle_stage in ('in_stock', 'completed')"
                decoration-danger="lifecycle_stage == 'declined'"
                decoration-muted="lifecycle_stage == 'cancel'"/>
+        <!-- Отзыв 2026-07-23: "должна быть возможность увидеть
+             ориентировочную дату прибытия" - подсказка при наведении на
+             сегменты уже есть (lifecycle_steps_field.js), плюс отдельная
+             скрываемая колонка здесь - для тех, кому нужно видеть/
+             сортировать/выгружать дату напрямую, а не наводить курсор. -->
+        <field name="expected_arrival_date" string="Ориент. дата прибытия" optional="hide"/>
       </field>
       <field name="approval_state" position="attributes">
         <attribute name="optional">hide</attribute>

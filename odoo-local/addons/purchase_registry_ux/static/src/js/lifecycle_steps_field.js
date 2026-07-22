@@ -2,6 +2,7 @@
 
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
+import { formatDate } from "@web/core/l10n/dates";
 import { Component } from "@odoo/owl";
 
 // Компактный путь заказа вместо голого числа-процента (см. отзыв
@@ -88,10 +89,32 @@ export class LifecycleStepsField extends Component {
     get actionColorClass() {
         return ACTION_COLOR_CLASS[this.actionValue] || DEFAULT_ACTION_COLOR_CLASS;
     }
+
+    // Отзыв 2026-07-23: "должна быть возможность увидеть ориентировочную
+    // дату прибытия" - показывается подсказкой при наведении (плюс отдельная
+    // скрываемая колонка expected_arrival_date во вьюхе и в раскрывающемся
+    // блоке - см. views/purchase_registry_views.xml и registry_expand_data,
+    // три места на выбор, а не втискивать ещё один видимый элемент в и так
+    // плотный виджет).
+    get arrivalDate() {
+        return this.props.record.data.expected_arrival_date;
+    }
+
+    get wrapperTitle() {
+        const stageLabel = this.steps[this.currentIndex] && this.steps[this.currentIndex][1];
+        if (!this.arrivalDate) {
+            return stageLabel;
+        }
+        const dateLabel = `Ориентировочная дата прибытия: ${formatDate(this.arrivalDate)}`;
+        return stageLabel ? `${stageLabel}\n${dateLabel}` : dateLabel;
+    }
 }
 
 registry.category("fields").add("lifecycle_steps", {
     component: LifecycleStepsField,
     supportedTypes: ["selection"],
-    fieldDependencies: [{ name: "pending_action_short", type: "selection" }],
+    fieldDependencies: [
+        { name: "pending_action_short", type: "selection" },
+        { name: "expected_arrival_date", type: "date" },
+    ],
 });

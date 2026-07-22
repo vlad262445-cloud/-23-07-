@@ -34,6 +34,10 @@
                             <strong>№ счёта поставщика:</strong>
                             <t t-esc="record.data.registry_expand_data.partner_ref"/>
                         </div>
+                        <div t-if="record.data.registry_expand_data and record.data.registry_expand_data.expected_arrival_date">
+                            <strong>Ориентировочная дата прибытия:</strong>
+                            <t t-esc="record.data.registry_expand_data.expected_arrival_date"/>
+                        </div>
                         <table class="table table-sm mb-0 mt-1" t-if="record.data.registry_expand_data">
                             <thead>
                                 <tr>
