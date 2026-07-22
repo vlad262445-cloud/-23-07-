@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+    <!-- t-inherit-mode="primary" - копия шаблона под НОВЫМ именем, а не
+         правка оригинала web.ListRenderer.RecordRow "на месте": это и
+         обеспечивает изоляцию от остальных списков purchase.order (см.
+         js_class в registry_list_renderer.js и п. 2.1 ТЗ). -->
+    <t t-name="purchase_registry_ux.RecordRow" t-inherit="web.ListRenderer.RecordRow" t-inherit-mode="primary">
+
+        <xpath expr="//td[hasclass('o_list_record_selector')]" position="before">
+            <td class="o_purchase_registry_expand_toggle text-center cursor-pointer"
+                tabindex="-1"
+                t-on-click.stop="() => this.toggleRegistryRowExpand(record)">
+                <i t-att-class="isRegistryRowExpanded(record) ? 'fa fa-chevron-down' : 'fa fa-chevron-right'"/>
+            </td>
+        </xpath>
+
+        <xpath expr="//tr[hasclass('o_data_row')]" position="after">
+            <tr t-if="isRegistryRowExpanded(record)" class="o_purchase_registry_expand_row">
+                <td t-att-colspan="nbCols" class="p-0">
+                    <div class="p-2 bg-light border-top border-bottom">
+                        <div t-if="record.data.registry_expand_data and record.data.registry_expand_data.partner_ref">
+                            <strong>№ счёта поставщика:</strong>
+                            <t t-esc="record.data.registry_expand_data.partner_ref"/>
+                        </div>
+                        <table class="table table-sm mb-0 mt-1" t-if="record.data.registry_expand_data">
+                            <thead>
+                                <tr>
+                                    <th>Наименование</th>
+                                    <th class="text-end">Кол-во</th>
+                                    <th class="text-end">Цена</th>
+                                    <th class="text-end">Сумма</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="record.data.registry_expand_data.lines" t-as="expand_line" t-key="expand_line_index">
+                                    <td><t t-esc="expand_line.name"/></td>
+                                    <td class="text-end"><t t-esc="expand_line.qty"/></td>
+                                    <td class="text-end"><t t-esc="expand_line.price"/></td>
+                                    <td class="text-end"><t t-esc="expand_line.subtotal"/></td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Итого</strong></td>
+                                    <td class="text-end">
+                                        <strong>
+                                            <t t-esc="record.data.registry_expand_data.amount_total"/>
+                                            <t t-esc="record.data.registry_expand_data.currency_symbol"/>
+                                        </strong>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </td>
+            </tr>
+        </xpath>
+
+    </t>
+
+</templates>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_purchase_registry_list_inherit_registry_ux" model="ir.ui.view">
+    <field name="name">purchase.order.registry.list.inherit.registry.ux</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase_pdf_import.view_purchase_registry_list"/>
+    <field name="arch" type="xml">
+
+      <!-- Раскрытие строки на месте вместо модального окна (п. 2.1 ТЗ).
+           Сам метод/форма view_purchase_order_quick_view_form в базовом
+           модуле не тронуты - могут вызываться откуда-то ещё. -->
+      <button name="action_open_quick_view" position="replace"/>
+
+      <xpath expr="//list" position="attributes">
+        <attribute name="js_class">purchase_registry_list</attribute>
+      </xpath>
+
+      <field name="payment_priority" position="before">
+        <field name="registry_expand_data" column_invisible="1"/>
+      </field>
+
+      <!-- Поставщик: полное юрлицо -> короткое имя (п. 2.2). Само поле
+           partner_id на заказе не трогаем - только эта колонка реестра. -->
+      <field name="partner_id" position="replace">
+        <field name="partner_short_name" string="Поставщик"/>
+      </field>
+
+      <!-- Запасной [Стандарт]-вариант на случай, если OWL-компонент сломается
+           на будущем обновлении Odoo - см. п. 2.1 ТЗ и README.md. -->
+      <field name="amount_total" position="after">
+        <field name="partner_ref" string="№ счёта" optional="hide"/>
+        <field name="order_lines_preview" string="Позиции" optional="hide"/>
+      </field>
+
+      <!-- Статья затрат/категория - скрыты по умолчанию, коротким значением
+           вместо полного (п. 2.2). Сами поля cost_analytic_account_id/
+           cost_category_id на заказе не трогаем, фильтры/группировки в
+           search-view остаются как есть - см. README.md. -->
+      <field name="cost_analytic_account_id" position="replace">
+        <field name="cost_analytic_short" string="Статья затрат (кратко)" optional="hide"/>
+      </field>
+      <field name="cost_category_id" position="replace">
+        <field name="cost_category_short" string="Категория (кратко)" optional="hide"/>
+      </field>
+
+      <!-- Единая шкала жизненного цикла вместо четырёх статусных колонок
+           (п. 2.3). state/approval_state/request_state/document_status
+           остаются в модели и во вьюхе - только уходят в optional="hide"
+           (state уже был скрыт в базовом модуле). Удалять их нельзя. -->
+      <field name="state" position="before">
+        <field name="lifecycle_progress" widget="progressbar" string="Шкала"/>
+        <field name="lifecycle_stage" widget="badge" string="Этап"
+               decoration-success="lifecycle_stage == 'completed'"
+               decoration-warning="lifecycle_stage in ('to_approve', 'prepaid', 'in_transit')"
+               decoration-danger="lifecycle_stage in ('declined', 'cancel')"/>
+      </field>
+      <field name="approval_state" position="attributes">
+        <attribute name="optional">hide</attribute>
+      </field>
+      <field name="request_state" position="attributes">
+        <attribute name="optional">hide</attribute>
+      </field>
+      <field name="document_status" position="attributes">
+        <attribute name="optional">hide</attribute>
+      </field>
+
+      <!-- Короткий ярлык вместо длинной фразы по умолчанию (п. 2.2). Длинный
+           pending_action_note остаётся как есть, только уходит в
+           optional="hide" - используется в других местах, не трогаем сам
+           метод его вычисления. -->
+      <field name="pending_action_note" position="before">
+        <field name="pending_action_short" widget="badge" string="Что требуется"/>
+      </field>
+      <field name="pending_action_note" position="attributes">
+        <attribute name="optional">hide</attribute>
+      </field>
+
+    </field>
+  </record>
+</odoo>
