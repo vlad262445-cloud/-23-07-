@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Кнопки ручного управления архивом - на форме заказа. -->
+  <record id="view_purchase_order_form_inherit_order_archive" model="ir.ui.view">
+    <field name="name">purchase.order.form.inherit.order.archive</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase_pdf_import.view_purchase_order_form_inherit_pdf_import"/>
+    <field name="arch" type="xml">
+      <xpath expr="//header" position="inside">
+        <field name="is_completed" invisible="1"/>
+        <field name="is_archived" invisible="1"/>
+        <button name="action_archive_manually" type="object" string="В архив"
+                groups="purchase_pdf_import.group_chief_buyer,purchase.group_purchase_manager"
+                confirm="Переместить эту закупку в архив?"
+                invisible="not is_completed or is_archived"/>
+        <button name="action_unarchive" type="object" string="Вернуть из архива"
+                groups="purchase_pdf_import.group_chief_buyer,purchase.group_purchase_manager"
+                invisible="not is_archived"/>
+      </xpath>
+    </field>
+  </record>
+
+  <!-- Колонка-фолбэк в реестре/архиве, пока не установлен модуль
+       purchase_registry_ux (там is_completed встраивается в lifecycle_stage -
+       см. NOTES.md, зависимость в манифесте намеренно не ставим, п. 4.1 ТЗ). -->
+  <record id="view_purchase_registry_list_inherit_order_archive" model="ir.ui.view">
+    <field name="name">purchase.order.registry.list.inherit.order.archive</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase_pdf_import.view_purchase_registry_list"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='user_id']" position="after">
+        <field name="is_completed" string="Завершена" widget="boolean_toggle" readonly="1" optional="hide"/>
+      </xpath>
+    </field>
+  </record>
+
+  <!-- По умолчанию архивные закупки не должны засорять реестр, но история
+       должна оставаться доступной без ухода в отдельное меню - см. п. 4.2
+       ТЗ. Сама рестрикция реализована ФИЛЬТРОМ (не жёстким domain= на
+       action), включённым по умолчанию через контекст: у него есть пара
+       "Показать архивные" (domain=[]) в той же группе фильтров - если
+       включить обе одновременно, Odoo объединяет активные фильтры внутри
+       одной группы через OR, а OR с пустым доменом снимает всю рестрикцию
+       целиком. Это и есть "domain=[], снимает ограничение" из ТЗ - если бы
+       ограничение сидело в самом domain= экшена, никакой фильтр не смог бы
+       его снять. -->
+  <record id="view_purchase_registry_search_inherit_order_archive" model="ir.ui.view">
+    <field name="name">purchase.order.registry.search.inherit.order.archive</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase_pdf_import.view_purchase_registry_search"/>
+    <field name="arch" type="xml">
+      <xpath expr="//filter[@name='filter_priority_urgent']" position="after">
+        <separator/>
+        <filter string="Скрыть архивные" name="filter_hide_archived"
+                domain="[('is_archived', '=', False)]"/>
+        <filter string="Показать архивные" name="filter_show_archived" domain="[]"/>
+      </xpath>
+    </field>
+  </record>
+
+  <record id="purchase_pdf_import.action_purchase_registry" model="ir.actions.act_window">
+    <field name="context">{'search_default_show_all': 1, 'search_default_filter_hide_archived': 1}</field>
+  </record>
+
+  <record id="action_purchase_archive" model="ir.actions.act_window">
+    <field name="name">Архив закупок</field>
+    <field name="res_model">purchase.order</field>
+    <field name="view_mode">list,pivot,graph,form</field>
+    <field name="search_view_id" ref="purchase_pdf_import.view_purchase_registry_search"/>
+    <field name="domain">[('is_archived', '=', True)]</field>
+  </record>
+
+  <record id="action_purchase_archive_list_view" model="ir.actions.act_window.view">
+    <field name="sequence">1</field>
+    <field name="view_mode">list</field>
+    <field name="view_id" ref="purchase_pdf_import.view_purchase_registry_list"/>
+    <field name="act_window_id" ref="action_purchase_archive"/>
+  </record>
+
+  <menuitem id="menu_purchase_archive" name="Архив закупок"
+            parent="purchase_pdf_import.menu_purchase_registry_root"
+            action="action_purchase_archive" sequence="20"/>
+</odoo>
