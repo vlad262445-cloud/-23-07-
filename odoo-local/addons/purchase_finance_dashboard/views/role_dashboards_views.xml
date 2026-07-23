@@ -1,0 +1,310 @@
+<odoo>
+  <!-- ============ Собственник (п. 7.5) ============ -->
+
+  <record id="action_owner_frozen_by_vendor" model="ir.actions.act_window">
+    <field name="name">Заморозка по поставщикам</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">pivot,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="domain">[('amount_frozen', '&gt;', 0)]</field>
+    <field name="context">{'pivot_measures': ['amount_frozen', 'days_frozen'], 'pivot_row_groupby': ['partner_id']}</field>
+  </record>
+
+  <record id="action_owner_frozen_by_age" model="ir.actions.act_window">
+    <field name="name">Заморозка по возрасту</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">graph,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="domain">[('amount_frozen', '&gt;', 0)]</field>
+    <field name="context">{'graph_measure': 'amount_frozen', 'graph_groupbys': ['days_frozen_bucket']}</field>
+  </record>
+
+  <record id="action_owner_debt_by_vendor" model="ir.actions.act_window">
+    <field name="name">Долги по поставщикам</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">pivot,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="domain">[('amount_debt_received', '&gt;', 0)]</field>
+    <field name="context">{'pivot_measures': ['amount_debt_received'], 'pivot_row_groupby': ['partner_id']}</field>
+  </record>
+
+  <record id="action_owner_dynamics" model="ir.actions.act_window">
+    <field name="name">Динамика по периодам</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">graph,pivot,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'graph_measure': 'amount_total', 'graph_groupbys': ['date_month'], 'graph_mode': 'line'}</field>
+  </record>
+
+  <record id="action_owner_concentration" model="ir.actions.act_window">
+    <field name="name">Концентрация на поставщиках</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">pivot,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'pivot_measures': ['amount_total'], 'pivot_row_groupby': ['partner_id']}</field>
+    <field name="help">Отсортируйте колонку "Сумма заказов" по убыванию, чтобы увидеть долю топ-поставщиков в обороте.</field>
+  </record>
+
+  <!-- ============ Генеральный директор (п. 7.6) ============ -->
+
+  <record id="action_ceo_funnel" model="ir.actions.act_window">
+    <field name="name">Воронка закупок</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">graph,pivot,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'graph_measure': 'amount_total', 'graph_groupbys': ['lifecycle_stage']}</field>
+  </record>
+
+  <record id="view_purchase_finance_report_list_stage_age" model="ir.ui.view">
+    <field name="name">purchase.finance.report.list.stage.age</field>
+    <field name="model">purchase.finance.report</field>
+    <field name="arch" type="xml">
+      <list string="Возраст на этапе" create="false" edit="false" delete="false"
+            default_order="days_in_stage desc">
+        <field name="order_id"/>
+        <field name="partner_id"/>
+        <field name="lifecycle_stage" widget="badge"/>
+        <field name="days_in_stage" decoration-danger="days_in_stage &gt; 5"/>
+        <field name="amount_total"/>
+        <field name="currency_id" column_invisible="1"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_ceo_stage_age" model="ir.actions.act_window">
+    <field name="name">Возраст на этапе</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">list,pivot</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="domain">[('lifecycle_stage', 'not in', ('completed', 'declined', 'cancel'))]</field>
+    <field name="view_ids" eval="[(5, 0, 0),
+        (0, 0, {'view_mode': 'list', 'view_id': ref('view_purchase_finance_report_list_stage_age')}),
+        (0, 0, {'view_mode': 'pivot', 'view_id': ref('view_purchase_finance_report_pivot')})]"/>
+  </record>
+
+  <record id="action_ceo_departments" model="ir.actions.act_window">
+    <field name="name">Отделы</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">pivot,graph,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'pivot_measures': ['amount_total'], 'pivot_row_groupby': ['department_id'], 'pivot_column_groupby': ['date_month']}</field>
+  </record>
+
+  <!-- "Согласование: кто держит" - [Python], decision_date уже был в базовом
+       модуле, days_to_decide - новое compute-поле этого модуля
+       (models/purchase_approval_line.py). Своей модели-отчёта не заводим -
+       обычный pivot/list прямо на purchase.approval.line. -->
+  <record id="view_purchase_approval_line_dashboard_list" model="ir.ui.view">
+    <field name="name">purchase.approval.line.dashboard.list</field>
+    <field name="model">purchase.approval.line</field>
+    <field name="arch" type="xml">
+      <list string="Согласование: кто держит" create="false" edit="false" delete="false"
+            default_order="days_to_decide desc">
+        <field name="purchase_order_id"/>
+        <field name="approver_id"/>
+        <field name="state" widget="badge"/>
+        <field name="create_date"/>
+        <field name="days_to_decide" widget="float_time"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_purchase_approval_line_dashboard_pivot" model="ir.ui.view">
+    <field name="name">purchase.approval.line.dashboard.pivot</field>
+    <field name="model">purchase.approval.line</field>
+    <field name="arch" type="xml">
+      <pivot string="Согласование: кто держит">
+        <field name="approver_id" type="row"/>
+        <field name="days_to_decide" type="measure"/>
+      </pivot>
+    </field>
+  </record>
+
+  <record id="action_ceo_approval_delay" model="ir.actions.act_window">
+    <field name="name">Согласование: кто держит</field>
+    <field name="res_model">purchase.approval.line</field>
+    <field name="view_mode">list,pivot</field>
+    <field name="domain">[('state', '=', 'pending')]</field>
+    <field name="view_ids" eval="[(5, 0, 0),
+        (0, 0, {'view_mode': 'list', 'view_id': ref('view_purchase_approval_line_dashboard_list')}),
+        (0, 0, {'view_mode': 'pivot', 'view_id': ref('view_purchase_approval_line_dashboard_pivot')})]"/>
+  </record>
+
+  <!-- Поставщики: срыв сроков - переиспользуем стандартную модель
+       vendor.delay.report (purchase_stock), права уже выданы (security/
+       ir.model.access.csv), здесь только своя вьюха/действие/пункт меню
+       под наши роли. Свою модель НЕ пишем (п. 7.6 ТЗ). -->
+  <record id="view_vendor_delay_report_dashboard_pivot" model="ir.ui.view">
+    <field name="name">vendor.delay.report.dashboard.pivot</field>
+    <field name="model">vendor.delay.report</field>
+    <field name="arch" type="xml">
+      <pivot string="Поставщики: срыв сроков">
+        <field name="partner_id" type="row"/>
+        <field name="on_time_rate" type="measure"/>
+        <field name="qty_total" type="measure"/>
+      </pivot>
+    </field>
+  </record>
+
+  <record id="action_vendor_delay_dashboard" model="ir.actions.act_window">
+    <field name="name">Поставщики: срыв сроков</field>
+    <field name="res_model">vendor.delay.report</field>
+    <field name="view_mode">pivot,list</field>
+    <field name="view_id" ref="view_vendor_delay_report_dashboard_pivot"/>
+  </record>
+
+  <!-- ============ Финансист (п. 7.7) - дополняет модуль 6, не дублирует его ============ -->
+
+  <record id="view_purchase_finance_report_list_to_pay" model="ir.ui.view">
+    <field name="name">purchase.finance.report.list.to.pay</field>
+    <field name="model">purchase.finance.report</field>
+    <field name="arch" type="xml">
+      <list string="К оплате" create="false" edit="false" delete="false"
+            default_order="payment_priority desc, date_order asc">
+        <field name="order_id"/>
+        <field name="partner_id"/>
+        <field name="payment_priority" widget="badge"
+               decoration-warning="payment_priority == '1'" decoration-danger="payment_priority == '2'"/>
+        <field name="date_order"/>
+        <field name="amount_residual" sum="Остаток"/>
+        <field name="currency_id" column_invisible="1"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_finance_to_pay" model="ir.actions.act_window">
+    <field name="name">К оплате</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">list,pivot</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="domain">[('amount_residual', '&gt;', 0)]</field>
+    <field name="view_ids" eval="[(5, 0, 0),
+        (0, 0, {'view_mode': 'list', 'view_id': ref('view_purchase_finance_report_list_to_pay')}),
+        (0, 0, {'view_mode': 'pivot', 'view_id': ref('view_purchase_finance_report_pivot')})]"/>
+  </record>
+
+  <record id="action_finance_payments_by_month_vendor" model="ir.actions.act_window">
+    <field name="name">Оплаты по месяцам × поставщик</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">pivot,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'pivot_measures': ['amount_paid'], 'pivot_row_groupby': ['partner_id'], 'pivot_column_groupby': ['date_month']}</field>
+  </record>
+
+  <record id="action_finance_cost_by_article" model="ir.actions.act_window">
+    <field name="name">К оплате по статьям × период</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">pivot,graph,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'pivot_measures': ['amount_paid', 'amount_residual'], 'pivot_row_groupby': ['cost_plan_root_id', 'cost_analytic_account_id'], 'pivot_column_groupby': ['date_month']}</field>
+  </record>
+
+  <record id="action_finance_article_dynamics" model="ir.actions.act_window">
+    <field name="name">Динамика статьи (оплаты)</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">graph,pivot,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'graph_measure': 'amount_paid', 'graph_groupbys': ['date_month'], 'graph_mode': 'line'}</field>
+  </record>
+
+  <record id="action_finance_frozen_debt_by_article" model="ir.actions.act_window">
+    <field name="name">Заморозка и долг по статьям (финансист)</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">pivot,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'pivot_measures': ['amount_frozen', 'amount_debt_received'], 'pivot_row_groupby': ['cost_plan_root_id', 'cost_analytic_account_id']}</field>
+  </record>
+
+  <record id="action_finance_docs_missing" model="ir.actions.act_window">
+    <field name="name">Документы не в порядке</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="domain">[('has_missing_docs', '=', True)]</field>
+  </record>
+
+  <!-- ============ Закупщик (п. 7.8) ============ -->
+
+  <record id="action_buyer_my_orders" model="ir.actions.act_window">
+    <field name="name">Мои заказы по этапам</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">graph,kanban,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="domain">[('user_id', '=', uid)]</field>
+    <field name="context">{'graph_measure': 'amount_total', 'graph_groupbys': ['lifecycle_stage']}</field>
+  </record>
+
+  <record id="action_buyer_article_x_vendor" model="ir.actions.act_window">
+    <field name="name">Мои закупки: статья × поставщик</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">pivot,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="domain">[('user_id', '=', uid)]</field>
+    <field name="context">{'pivot_measures': ['amount_total'], 'pivot_row_groupby': ['cost_analytic_account_id'], 'pivot_column_groupby': ['partner_id']}</field>
+  </record>
+
+  <record id="action_buyer_cost_by_period" model="ir.actions.act_window">
+    <field name="name">Мои закупки по статьям/категориям × период</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">pivot,graph,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="domain">[('user_id', '=', uid)]</field>
+    <field name="context">{'pivot_measures': ['amount_total'], 'pivot_row_groupby': ['cost_analytic_account_id', 'cost_category_id'], 'pivot_column_groupby': ['date_month']}</field>
+  </record>
+
+  <!-- Заявки без заказа - модель purchase.request, не отчёт (отчёт - одна
+       строка на ЗАКАЗ, заявки без заказа в нём в принципе не могут
+       появиться). Своей вьюхи не пишем - список полями по умолчанию
+       уже даёт всё нужное (номер/заявитель/отдел/дата/возраст виден по
+       create_date), только своё действие с нужным доменом/группами. -->
+  <record id="action_buyer_requests_without_order" model="ir.actions.act_window">
+    <field name="name">Заявки без заказа</field>
+    <field name="res_model">purchase.request</field>
+    <field name="view_mode">list,form</field>
+    <field name="domain">[('purchase_order_id', '=', False), ('state', '!=', 'merged')]</field>
+  </record>
+
+  <record id="action_buyer_activity_mine" model="ir.actions.act_window">
+    <field name="name">Требуется от меня</field>
+    <field name="res_model">purchase.order</field>
+    <field name="view_mode">list,form</field>
+    <field name="domain">[('activity_ids.user_id', '=', uid)]</field>
+  </record>
+
+  <record id="action_buyer_overdue_desired_date" model="ir.actions.act_window">
+    <field name="name">Просрочен желаемый срок</field>
+    <field name="res_model">purchase.request</field>
+    <field name="view_mode">list,form</field>
+    <field name="domain">[('desired_date', '&lt;', context_today().strftime('%Y-%m-%d')),
+                           ('state', 'not in', ('in_stock', 'merged'))]</field>
+  </record>
+
+  <record id="action_buyer_in_transit" model="ir.actions.act_window">
+    <field name="name">В пути</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="domain">[('lifecycle_stage', '=', 'in_transit')]</field>
+  </record>
+
+  <record id="action_buyer_declined" model="ir.actions.act_window">
+    <field name="name">Отклонённые - переделать</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="domain">[('lifecycle_stage', '=', 'declined')]</field>
+  </record>
+
+  <!-- Упрощение: "дошли до in_stock или дальше" (см. _request_state_reached
+       в базовом модуле) здесь не воспроизводится - берём точное совпадение
+       request_state == 'in_stock'. Для post_payment/split_50_50 заявка,
+       ушедшая дальше в invoice_paid уже без прикреплённого УПД, в этот
+       список не попадёт - тот же класс приближения, что уже принят и
+       описан в purchase_finance_workspace/NOTES.md для других экранов. -->
+  <record id="action_buyer_no_updd" model="ir.actions.act_window">
+    <field name="name">Нет УПД по принятому</field>
+    <field name="res_model">purchase.order</field>
+    <field name="view_mode">list,form</field>
+    <field name="domain">[('request_state', '=', 'in_stock'), ('updd_line_ids', '=', False), ('updd_skipped', '=', False)]</field>
+  </record>
+</odoo>

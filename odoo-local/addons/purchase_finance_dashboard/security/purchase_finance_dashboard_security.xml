@@ -1,0 +1,20 @@
+<odoo>
+  <!-- Обе роли - только чтение (п. 7.2 ТЗ). Наследование group_observer даёт
+       им видимость всех заявок/заказов без единого нового ir.rule - тот же
+       приём, что уже описан в его собственном comment (purchase_roles.xml). -->
+  <record id="group_ceo" model="res.groups">
+    <field name="name">Генеральный директор</field>
+    <field name="category_id" ref="base.module_category_inventory_purchase"/>
+    <field name="implied_ids" eval="[(4, ref('base.group_user')),
+                                      (4, ref('purchase_pdf_import.group_observer'))]"/>
+    <field name="comment">Видит все дашборды (процесс + деньги). Только чтение - не согласует, не платит.</field>
+  </record>
+
+  <record id="group_owner" model="res.groups">
+    <field name="name">Собственник</field>
+    <field name="category_id" ref="base.module_category_inventory_purchase"/>
+    <field name="implied_ids" eval="[(4, ref('base.group_user')),
+                                      (4, ref('purchase_pdf_import.group_observer'))]"/>
+    <field name="comment">Видит дашборд денег и риска. Только чтение.</field>
+  </record>
+</odoo>

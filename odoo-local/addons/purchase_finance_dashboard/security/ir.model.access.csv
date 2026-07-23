@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_purchase_finance_report_owner,purchase.finance.report.owner,model_purchase_finance_report,group_owner,1,0,0,0
+access_purchase_finance_report_ceo,purchase.finance.report.ceo,model_purchase_finance_report,group_ceo,1,0,0,0
+access_purchase_finance_report_accountant,purchase.finance.report.accountant,model_purchase_finance_report,purchase_pdf_import.group_accountant,1,0,0,0
+access_purchase_finance_report_chief_buyer,purchase.finance.report.chief.buyer,model_purchase_finance_report,purchase_pdf_import.group_chief_buyer,1,0,0,0
+access_purchase_finance_report_buyer,purchase.finance.report.buyer,model_purchase_finance_report,purchase.group_purchase_user,1,0,0,0
+access_vendor_delay_report_owner,vendor.delay.report.owner,purchase_stock.model_vendor_delay_report,group_owner,1,0,0,0
+access_vendor_delay_report_ceo,vendor.delay.report.ceo,purchase_stock.model_vendor_delay_report,group_ceo,1,0,0,0

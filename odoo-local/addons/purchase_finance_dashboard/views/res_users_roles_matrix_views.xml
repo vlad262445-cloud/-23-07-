@@ -1,0 +1,16 @@
+<odoo>
+  <!-- П. 7.2 ТЗ: добавить is_ceo/is_owner в экран "Роли сотрудников" рядом с
+       уже существующими пятью галочками - расширяем ту же вьюху через
+       xpath, не переписывая её. -->
+  <record id="view_res_users_roles_matrix_list_ceo_owner" model="ir.ui.view">
+    <field name="name">res.users.roles.matrix.list.ceo.owner</field>
+    <field name="model">res.users</field>
+    <field name="inherit_id" ref="purchase_pdf_import.view_res_users_roles_matrix_list"/>
+    <field name="arch" type="xml">
+      <field name="is_observer" position="after">
+        <field name="is_ceo" widget="boolean_toggle"/>
+        <field name="is_owner" widget="boolean_toggle"/>
+      </field>
+    </field>
+  </record>
+</odoo>

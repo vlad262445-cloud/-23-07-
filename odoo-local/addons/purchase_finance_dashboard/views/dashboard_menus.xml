@@ -1,0 +1,129 @@
+<odoo>
+  <!-- Матрица доступа (п. 7.2 ТЗ): Главный закупщик (group_chief_buyer)
+       видит ВСЕ четыре дашборда - его группа стоит на каждом верхнем меню
+       ниже. Доступ только на чтение - ни один экран этого модуля не
+       добавляет ни одного нового права на запись (см. security/). -->
+
+  <!-- ============ Собственник (п. 7.5) ============ -->
+  <menuitem id="menu_dashboard_owner_root" name="Дашборд · Собственник" sequence="90"
+            groups="group_owner,purchase_pdf_import.group_chief_buyer,group_ceo"/>
+
+  <menuitem id="menu_owner_frozen_by_vendor" name="Заморозка по поставщикам"
+            parent="menu_dashboard_owner_root" action="action_owner_frozen_by_vendor" sequence="10"/>
+  <menuitem id="menu_owner_frozen_by_age" name="Заморозка по возрасту"
+            parent="menu_dashboard_owner_root" action="action_owner_frozen_by_age" sequence="20"/>
+  <menuitem id="menu_owner_debt_by_vendor" name="Долги по поставщикам"
+            parent="menu_dashboard_owner_root" action="action_owner_debt_by_vendor" sequence="30"/>
+  <menuitem id="menu_owner_dynamics" name="Динамика по периодам"
+            parent="menu_dashboard_owner_root" action="action_owner_dynamics" sequence="40"/>
+  <menuitem id="menu_owner_concentration" name="Концентрация на поставщиках"
+            parent="menu_dashboard_owner_root" action="action_owner_concentration" sequence="50"/>
+
+  <menuitem id="menu_owner_cost_root" name="Структура затрат"
+            parent="menu_dashboard_owner_root" sequence="60"/>
+  <menuitem id="menu_owner_cost_top_level" name="Затраты по верхнему уровню"
+            parent="menu_owner_cost_root" action="action_cost_top_level" sequence="10"/>
+  <menuitem id="menu_owner_cost_by_article" name="Затраты по статьям × период"
+            parent="menu_owner_cost_root" action="action_cost_by_article" sequence="20"/>
+  <menuitem id="menu_owner_cost_by_category" name="Затраты по категориям × период"
+            parent="menu_owner_cost_root" action="action_cost_by_category" sequence="30"/>
+  <menuitem id="menu_owner_cost_article_x_category" name="Статья × Категория"
+            parent="menu_owner_cost_root" action="action_cost_article_x_category" sequence="40"/>
+  <menuitem id="menu_owner_cost_article_x_vendor" name="Статья × Поставщик"
+            parent="menu_owner_cost_root" action="action_cost_article_x_vendor" sequence="50"/>
+  <menuitem id="menu_owner_cost_article_x_department" name="Статья × Отдел"
+            parent="menu_owner_cost_root" action="action_cost_article_x_department" sequence="60"/>
+  <menuitem id="menu_owner_cost_article_dynamics" name="Динамика статьи"
+            parent="menu_owner_cost_root" action="action_cost_article_dynamics" sequence="70"/>
+  <menuitem id="menu_owner_cost_frozen_debt" name="Заморозка и долг по статьям"
+            parent="menu_owner_cost_root" action="action_cost_frozen_debt_by_article" sequence="80"/>
+
+  <menuitem id="menu_owner_no_analytics" name="Без аналитики"
+            parent="menu_dashboard_owner_root" action="action_no_analytics" sequence="70"/>
+
+  <!-- ============ Генеральный директор (п. 7.6) ============ -->
+  <menuitem id="menu_dashboard_ceo_root" name="Дашборд · Генеральный директор" sequence="91"
+            groups="group_ceo,purchase_pdf_import.group_chief_buyer,group_owner"/>
+
+  <menuitem id="menu_ceo_funnel" name="Воронка закупок"
+            parent="menu_dashboard_ceo_root" action="action_ceo_funnel" sequence="10"/>
+  <menuitem id="menu_ceo_stage_age" name="Возраст на этапе"
+            parent="menu_dashboard_ceo_root" action="action_ceo_stage_age" sequence="20"/>
+  <menuitem id="menu_ceo_approval_delay" name="Согласование: кто держит"
+            parent="menu_dashboard_ceo_root" action="action_ceo_approval_delay" sequence="30"/>
+  <menuitem id="menu_ceo_departments" name="Отделы"
+            parent="menu_dashboard_ceo_root" action="action_ceo_departments" sequence="40"/>
+
+  <menuitem id="menu_ceo_cost_root" name="Затраты"
+            parent="menu_dashboard_ceo_root" sequence="50"/>
+  <menuitem id="menu_ceo_cost_top_level" name="Затраты по верхнему уровню"
+            parent="menu_ceo_cost_root" action="action_cost_top_level" sequence="10"/>
+  <menuitem id="menu_ceo_cost_by_article" name="Затраты по статьям × период"
+            parent="menu_ceo_cost_root" action="action_cost_by_article" sequence="20"/>
+  <menuitem id="menu_ceo_cost_by_category" name="Затраты по категориям × период"
+            parent="menu_ceo_cost_root" action="action_cost_by_category" sequence="30"/>
+  <menuitem id="menu_ceo_cost_article_x_category" name="Статья × Категория"
+            parent="menu_ceo_cost_root" action="action_cost_article_x_category" sequence="40"/>
+  <menuitem id="menu_ceo_cost_article_x_department" name="Статья × Отдел (основной)"
+            parent="menu_ceo_cost_root" action="action_cost_article_x_department" sequence="50"/>
+  <menuitem id="menu_ceo_cost_article_dynamics" name="Динамика статьи"
+            parent="menu_ceo_cost_root" action="action_cost_article_dynamics" sequence="60"/>
+  <menuitem id="menu_ceo_cost_frozen_debt" name="Заморозка и долг по статьям"
+            parent="menu_ceo_cost_root" action="action_cost_frozen_debt_by_article" sequence="70"/>
+
+  <menuitem id="menu_ceo_vendor_delay" name="Поставщики: срыв сроков"
+            parent="menu_dashboard_ceo_root" action="action_vendor_delay_dashboard" sequence="60"/>
+  <menuitem id="menu_ceo_no_analytics" name="Без аналитики"
+            parent="menu_dashboard_ceo_root" action="action_no_analytics" sequence="70"/>
+
+  <!-- ============ Финансист (п. 7.7) ============ -->
+  <menuitem id="menu_dashboard_finance_root" name="Дашборд · Финансы" sequence="92"
+            groups="purchase_pdf_import.group_accountant,purchase_pdf_import.group_chief_buyer,group_ceo,group_owner"/>
+
+  <menuitem id="menu_finance_to_pay" name="К оплате"
+            parent="menu_dashboard_finance_root" action="action_finance_to_pay" sequence="10"/>
+  <menuitem id="menu_finance_payments_by_month" name="Оплаты по месяцам × поставщик"
+            parent="menu_dashboard_finance_root" action="action_finance_payments_by_month_vendor" sequence="20"/>
+
+  <menuitem id="menu_finance_cost_root" name="Затраты"
+            parent="menu_dashboard_finance_root" sequence="30"/>
+  <menuitem id="menu_finance_cost_by_article" name="По статьям × период"
+            parent="menu_finance_cost_root" action="action_finance_cost_by_article" sequence="10"/>
+  <menuitem id="menu_finance_cost_article_dynamics" name="Динамика статьи"
+            parent="menu_finance_cost_root" action="action_finance_article_dynamics" sequence="20"/>
+  <menuitem id="menu_finance_cost_frozen_debt" name="Заморозка и долг по статьям"
+            parent="menu_finance_cost_root" action="action_finance_frozen_debt_by_article" sequence="30"/>
+
+  <menuitem id="menu_finance_docs_missing" name="Документы не в порядке"
+            parent="menu_dashboard_finance_root" action="action_finance_docs_missing" sequence="40"/>
+  <menuitem id="menu_finance_no_analytics" name="Без аналитики"
+            parent="menu_dashboard_finance_root" action="action_no_analytics" sequence="50"/>
+
+  <!-- ============ Закупщик (п. 7.8) ============ -->
+  <menuitem id="menu_dashboard_buyer_root" name="Дашборд · Закупки" sequence="93"
+            groups="purchase.group_purchase_user,purchase_pdf_import.group_chief_buyer,group_ceo,group_owner"/>
+
+  <menuitem id="menu_buyer_activity_mine" name="Требуется от меня"
+            parent="menu_dashboard_buyer_root" action="action_buyer_activity_mine" sequence="10"/>
+  <menuitem id="menu_buyer_my_orders" name="Мои заказы по этапам"
+            parent="menu_dashboard_buyer_root" action="action_buyer_my_orders" sequence="20"/>
+  <menuitem id="menu_buyer_requests_without_order" name="Заявки без заказа"
+            parent="menu_dashboard_buyer_root" action="action_buyer_requests_without_order" sequence="30"/>
+  <menuitem id="menu_buyer_overdue_desired_date" name="Просрочен желаемый срок"
+            parent="menu_dashboard_buyer_root" action="action_buyer_overdue_desired_date" sequence="40"/>
+  <menuitem id="menu_buyer_in_transit" name="В пути"
+            parent="menu_dashboard_buyer_root" action="action_buyer_in_transit" sequence="50"/>
+  <menuitem id="menu_buyer_declined" name="Отклонённые - переделать"
+            parent="menu_dashboard_buyer_root" action="action_buyer_declined" sequence="60"/>
+  <menuitem id="menu_buyer_no_updd" name="Нет УПД по принятому"
+            parent="menu_dashboard_buyer_root" action="action_buyer_no_updd" sequence="70"/>
+  <menuitem id="menu_buyer_vendor_delay" name="Поставщики: срыв сроков"
+            parent="menu_dashboard_buyer_root" action="action_vendor_delay_dashboard" sequence="80"/>
+
+  <menuitem id="menu_buyer_cost_root" name="Мои закупки по статьям"
+            parent="menu_dashboard_buyer_root" sequence="90"/>
+  <menuitem id="menu_buyer_cost_article_x_vendor" name="Статья × Поставщик (основной)"
+            parent="menu_buyer_cost_root" action="action_buyer_article_x_vendor" sequence="10"/>
+  <menuitem id="menu_buyer_cost_by_period" name="По статьям/категориям × период"
+            parent="menu_buyer_cost_root" action="action_buyer_cost_by_period" sequence="20"/>
+</odoo>

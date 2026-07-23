@@ -1,0 +1,200 @@
+<odoo>
+  <!-- ============ Базовые вьюхи модели (переиспользуются всеми экранами через context/domain) ============ -->
+
+  <record id="view_purchase_finance_report_search" model="ir.ui.view">
+    <field name="name">purchase.finance.report.search</field>
+    <field name="model">purchase.finance.report</field>
+    <field name="arch" type="xml">
+      <search string="Финансовый отчёт по закупкам">
+        <field name="order_id"/>
+        <field name="partner_id"/>
+        <field name="cost_analytic_account_id"/>
+        <field name="cost_category_id"/>
+        <field name="department_id"/>
+        <field name="user_id"/>
+        <filter string="Не оплачено" name="filter_unpaid" domain="[('amount_residual', '&gt;', 0)]"/>
+        <filter string="Заморожено" name="filter_frozen" domain="[('amount_frozen', '&gt;', 0)]"/>
+        <filter string="Долг (получено, не оплачено)" name="filter_debt" domain="[('amount_debt_received', '&gt;', 0)]"/>
+        <filter string="Срочные" name="filter_urgent" domain="[('payment_priority', 'in', ('1', '2'))]"/>
+        <filter string="Товар получен" name="filter_received" domain="[('is_received', '=', True)]"/>
+        <filter string="Товар не получен" name="filter_not_received" domain="[('is_received', '=', False)]"/>
+        <filter string="Не хватает документов" name="filter_missing_docs" domain="[('has_missing_docs', '=', True)]"/>
+        <filter string="Без аналитики" name="filter_no_analytics"
+                domain="['|', ('cost_analytic_account_id', '=', False), ('cost_category_id', '=', False)]"/>
+        <filter string="Мои закупки" name="filter_mine" domain="[('user_id', '=', uid)]"/>
+        <separator/>
+        <filter string="Заказ" name="group_order" context="{'group_by': 'order_id'}"/>
+        <filter string="Поставщик" name="group_partner" context="{'group_by': 'partner_id'}"/>
+        <filter string="Отдел/участок" name="group_department" context="{'group_by': 'department_id'}"/>
+        <filter string="Закупщик" name="group_buyer" context="{'group_by': 'user_id'}"/>
+        <filter string="Верхний уровень статьи" name="group_plan_root" context="{'group_by': 'cost_plan_root_id'}"/>
+        <filter string="Статья затрат" name="group_analytic" context="{'group_by': 'cost_analytic_account_id'}"/>
+        <filter string="Категория" name="group_category" context="{'group_by': 'cost_category_id'}"/>
+        <filter string="Этап" name="group_stage" context="{'group_by': 'lifecycle_stage'}"/>
+        <filter string="Месяц" name="group_month" context="{'group_by': 'date_month'}"/>
+        <filter string="Квартал" name="group_quarter" context="{'group_by': 'date_quarter'}"/>
+        <filter string="Год" name="group_year" context="{'group_by': 'date_year'}"/>
+      </search>
+    </field>
+  </record>
+
+  <record id="view_purchase_finance_report_list" model="ir.ui.view">
+    <field name="name">purchase.finance.report.list</field>
+    <field name="model">purchase.finance.report</field>
+    <field name="arch" type="xml">
+      <list string="Финансовый отчёт по закупкам" create="false" edit="false" delete="false">
+        <field name="order_id"/>
+        <field name="partner_id"/>
+        <field name="cost_analytic_account_id" optional="show"/>
+        <field name="cost_category_id" optional="hide"/>
+        <field name="department_id" optional="hide"/>
+        <field name="date_order"/>
+        <field name="lifecycle_stage" widget="badge" optional="show"/>
+        <field name="payment_priority" widget="badge" optional="hide"
+               decoration-warning="payment_priority == '1'" decoration-danger="payment_priority == '2'"/>
+        <field name="amount_total" sum="Сумма заказов"/>
+        <field name="amount_paid" sum="Оплачено"/>
+        <field name="amount_residual" sum="Остаток"/>
+        <field name="amount_frozen" sum="Заморожено" optional="show"/>
+        <field name="amount_debt_received" sum="Долг" optional="show"/>
+        <field name="days_frozen" optional="hide"/>
+        <field name="days_debt" optional="hide"/>
+        <field name="days_in_stage" optional="hide"/>
+        <field name="currency_id" column_invisible="1"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_purchase_finance_report_kanban" model="ir.ui.view">
+    <field name="name">purchase.finance.report.kanban</field>
+    <field name="model">purchase.finance.report</field>
+    <field name="arch" type="xml">
+      <kanban class="o_kanban_small_column">
+        <field name="amount_total" sum="Сумма"/>
+        <field name="amount_residual" sum="Остаток"/>
+        <templates>
+          <t t-name="card">
+            <div t-attf-class="oe_kanban_card o_kanban_record #{record.payment_priority.raw_value == '2' ? 'border-start border-danger border-3' : ''}">
+              <div class="d-flex justify-content-between">
+                <field name="order_id" class="fw-bold"/>
+                <field name="payment_priority" widget="badge"/>
+              </div>
+              <div><field name="partner_id"/></div>
+              <div><field name="cost_analytic_account_id"/></div>
+              <div class="d-flex justify-content-between mt-1">
+                <span>Сумма: <field name="amount_total"/></span>
+                <span>Остаток: <field name="amount_residual"/></span>
+              </div>
+              <div><field name="lifecycle_stage" widget="badge"/></div>
+            </div>
+          </t>
+        </templates>
+      </kanban>
+    </field>
+  </record>
+
+  <record id="view_purchase_finance_report_graph" model="ir.ui.view">
+    <field name="name">purchase.finance.report.graph</field>
+    <field name="model">purchase.finance.report</field>
+    <field name="arch" type="xml">
+      <graph string="Финансовый отчёт по закупкам" type="bar">
+        <field name="cost_plan_root_id" type="row"/>
+        <field name="amount_total" type="measure"/>
+      </graph>
+    </field>
+  </record>
+
+  <record id="view_purchase_finance_report_pivot" model="ir.ui.view">
+    <field name="name">purchase.finance.report.pivot</field>
+    <field name="model">purchase.finance.report</field>
+    <field name="arch" type="xml">
+      <pivot string="Финансовый отчёт по закупкам">
+        <field name="cost_plan_root_id" type="row"/>
+        <field name="cost_analytic_account_id" type="row"/>
+        <field name="date_month" type="col"/>
+        <field name="amount_total" type="measure"/>
+      </pivot>
+    </field>
+  </record>
+
+  <!-- ============ 1-8: обязательный набор экранов по затратам (п. 7.4) ============
+       Строятся ОДИН РАЗ на общих вьюхах выше, различаются только
+       context (groupby/measure) - подключаются в меню всех ролей по
+       матрице п. 7.4, без переписывания под каждую роль отдельно. -->
+
+  <record id="action_cost_top_level" model="ir.actions.act_window">
+    <field name="name">Затраты по верхнему уровню</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">graph,pivot,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'graph_measure': 'amount_total', 'graph_groupbys': ['cost_plan_root_id'], 'pivot_measures': ['amount_total'], 'pivot_row_groupby': ['cost_plan_root_id']}</field>
+  </record>
+
+  <record id="action_cost_by_article" model="ir.actions.act_window">
+    <field name="name">Затраты по статьям × период</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">pivot,graph,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'pivot_measures': ['amount_total'], 'pivot_row_groupby': ['cost_plan_root_id', 'cost_analytic_account_id'], 'pivot_column_groupby': ['date_month']}</field>
+  </record>
+
+  <record id="action_cost_by_category" model="ir.actions.act_window">
+    <field name="name">Затраты по категориям × период</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">pivot,graph,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'pivot_measures': ['amount_total'], 'pivot_row_groupby': ['cost_category_id'], 'pivot_column_groupby': ['date_month']}</field>
+  </record>
+
+  <record id="action_cost_article_x_category" model="ir.actions.act_window">
+    <field name="name">Статья × Категория</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">pivot,graph,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'pivot_measures': ['amount_total'], 'pivot_row_groupby': ['cost_analytic_account_id'], 'pivot_column_groupby': ['cost_category_id']}</field>
+  </record>
+
+  <record id="action_cost_article_x_vendor" model="ir.actions.act_window">
+    <field name="name">Статья × Поставщик</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">pivot,graph,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'pivot_measures': ['amount_total'], 'pivot_row_groupby': ['cost_analytic_account_id'], 'pivot_column_groupby': ['partner_id']}</field>
+  </record>
+
+  <record id="action_cost_article_x_department" model="ir.actions.act_window">
+    <field name="name">Статья × Отдел</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">pivot,graph,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'pivot_measures': ['amount_total'], 'pivot_row_groupby': ['cost_analytic_account_id'], 'pivot_column_groupby': ['department_id']}</field>
+  </record>
+
+  <record id="action_cost_article_dynamics" model="ir.actions.act_window">
+    <field name="name">Динамика статьи</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">graph,pivot,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'graph_measure': 'amount_total', 'graph_groupbys': ['date_month'], 'graph_mode': 'line'}</field>
+    <field name="help">Выберите статью затрат через фильтр поиска, чтобы увидеть её динамику по месяцам.</field>
+  </record>
+
+  <record id="action_cost_frozen_debt_by_article" model="ir.actions.act_window">
+    <field name="name">Заморозка и долг по статьям</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">pivot,list</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="context">{'pivot_measures': ['amount_frozen', 'amount_debt_received'], 'pivot_row_groupby': ['cost_plan_root_id', 'cost_analytic_account_id']}</field>
+  </record>
+
+  <!-- ============ Контроль заполнения (п. 7.4) - общая для всех дашбордов ============ -->
+
+  <record id="action_no_analytics" model="ir.actions.act_window">
+    <field name="name">Без аналитики</field>
+    <field name="res_model">purchase.finance.report</field>
+    <field name="view_mode">list,pivot</field>
+    <field name="search_view_id" ref="view_purchase_finance_report_search"/>
+    <field name="domain">['|', ('cost_analytic_account_id', '=', False), ('cost_category_id', '=', False)]</field>
+    <field name="context">{}</field>
+  </record>
+</odoo>
