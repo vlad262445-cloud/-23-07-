@@ -1,0 +1,64 @@
+<odoo>
+  <record id="view_vendor_list" model="ir.ui.view">
+    <field name="name">res.partner.vendor.list</field>
+    <field name="model">res.partner</field>
+    <field name="arch" type="xml">
+      <list string="Поставщики" create="false" default_order="name">
+        <field name="name"/>
+        <field name="vat" string="ИНН"/>
+        <field name="vendor_order_count"/>
+        <field name="vendor_invoiced_total" sum="Выставлено"/>
+        <field name="vendor_paid_total" sum="Оплачено"/>
+        <field name="vendor_frozen_total" sum="Едет" optional="show"/>
+        <field name="vendor_debt_total" sum="Мы должны"/>
+        <field name="vendor_turnover_period" sum="Оборот за период"/>
+        <field name="vendor_last_order_date"/>
+        <field name="vendor_data_quality" widget="badge" optional="show"
+               decoration-danger="vendor_data_quality == 'critical'"
+               decoration-warning="vendor_data_quality == 'incomplete'"
+               decoration-success="vendor_data_quality == 'ok'"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_vendor_search" model="ir.ui.view">
+    <field name="name">res.partner.vendor.search</field>
+    <field name="model">res.partner</field>
+    <field name="arch" type="xml">
+      <search string="Поставщики">
+        <field name="name" string="Наименование/ИНН" filter_domain="['|', ('name', 'ilike', self), ('vat', 'ilike', self)]"/>
+        <separator/>
+        <filter string="Есть долг" name="filter_has_debt" domain="[('vendor_debt_total', '&gt;', 0)]"/>
+        <filter string="Есть заморозка" name="filter_has_frozen" domain="[('vendor_frozen_total', '&gt;', 0)]"/>
+        <filter string="Нет ИНН" name="filter_no_vat" domain="[('vat', '=', False)]"/>
+        <filter string="Не заказывали &gt; 90 дней" name="filter_stale"
+                domain="[('vendor_last_order_date', '&lt;', (context_today() - relativedelta(days=90)).strftime('%Y-%m-%d'))]"/>
+        <separator/>
+        <filter string="Текущий месяц" name="period_month"
+                context="{'vendor_stats_from': context_today().strftime('%Y-%m-01'), 'vendor_stats_to': context_today().strftime('%Y-%m-%d')}"/>
+        <filter string="Текущий год" name="period_year"
+                context="{'vendor_stats_from': context_today().strftime('%Y-01-01'), 'vendor_stats_to': context_today().strftime('%Y-%m-%d')}"/>
+        <filter string="С начала работы" name="period_all"
+                context="{'vendor_stats_from': '2000-01-01', 'vendor_stats_to': context_today().strftime('%Y-%m-%d')}"/>
+        <separator/>
+        <filter string="Страна" name="group_country" context="{'group_by': 'country_id'}"/>
+        <filter string="Город" name="group_city" context="{'group_by': 'city'}"/>
+        <filter string="Полнота карточки" name="group_quality" context="{'group_by': 'vendor_data_quality'}"/>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_vendor_list" model="ir.actions.act_window">
+    <field name="name">Поставщики</field>
+    <field name="res_model">res.partner</field>
+    <field name="view_mode">list,form</field>
+    <field name="view_id" ref="view_vendor_list"/>
+    <field name="search_view_id" ref="view_vendor_search"/>
+    <field name="domain">[('supplier_rank', '&gt;', 0)]</field>
+    <field name="context">{'default_supplier_rank': 1, 'res_partner_search_mode': 'supplier'}</field>
+  </record>
+
+  <menuitem id="menu_vendor_list" name="Поставщики"
+            parent="purchase_pdf_import.menu_purchase_registry_root"
+            action="action_vendor_list" sequence="20"/>
+</odoo>

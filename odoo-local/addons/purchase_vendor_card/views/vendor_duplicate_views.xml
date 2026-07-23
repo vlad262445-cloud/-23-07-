@@ -1,0 +1,48 @@
+<odoo>
+  <!-- Список-подготовка для поиска дублей (п. 8.6 ТЗ) - группировка по
+       vendor_duplicate_group_key делает группы-кандидатов видимыми рядом
+       друг с другом, с суммами по каждой карточке для сравнения. Дальше
+       пользователь сам выделяет 2+ строки одной группы и вызывает уже
+       существующее действие Odoo "Объединить" (base.action_partner_merge,
+       привязано к списку res.partner - появляется в меню "Действие" само,
+       свой мастер объединения не пишем). -->
+  <record id="view_vendor_duplicates_list" model="ir.ui.view">
+    <field name="name">res.partner.vendor.duplicates.list</field>
+    <field name="model">res.partner</field>
+    <field name="arch" type="xml">
+      <list string="Возможные дубли поставщиков" create="false" default_group_by="vendor_duplicate_group_key">
+        <field name="name"/>
+        <field name="vat" string="ИНН"/>
+        <field name="vendor_order_count"/>
+        <field name="vendor_invoiced_total" sum="Выставлено"/>
+        <field name="vendor_duplicate_group_key" column_invisible="1"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_server_vendor_duplicates" model="ir.actions.server">
+    <field name="name">Найти дубли поставщиков</field>
+    <field name="model_id" ref="base.model_res_partner"/>
+    <field name="state">code</field>
+    <field name="code">action = model.action_open_vendor_duplicates()</field>
+  </record>
+
+  <menuitem id="menu_vendor_duplicates" name="Найти дубли поставщиков"
+            parent="purchase_pdf_import.menu_purchase_registry_root"
+            action="action_server_vendor_duplicates" sequence="21"
+            groups="purchase.group_purchase_manager,purchase_pdf_import.group_chief_buyer"/>
+
+  <!-- "История цен" (п. 8.4 ТЗ) - вызывается кнопкой с карточки поставщика
+       (action_view_vendor_price_history), сюда только сама pivot-вьюха. -->
+  <record id="view_vendor_price_history_pivot" model="ir.ui.view">
+    <field name="name">purchase.order.line.vendor.price.history.pivot</field>
+    <field name="model">purchase.order.line</field>
+    <field name="arch" type="xml">
+      <pivot string="История цен">
+        <field name="product_id" type="row"/>
+        <field name="date_order" interval="month" type="col"/>
+        <field name="price_unit" type="measure"/>
+      </pivot>
+    </field>
+  </record>
+</odoo>

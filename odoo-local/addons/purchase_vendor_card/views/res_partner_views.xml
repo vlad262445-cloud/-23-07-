@@ -1,0 +1,115 @@
+<odoo>
+  <!-- Все смарт-кнопки/вкладки этого модуля - только для поставщиков
+       (supplier_rank > 0), чтобы не засорять карточки обычных контактов и
+       сотрудников (п. 8.4 ТЗ). Наследуем корневую base.view_partner_form
+       (не purchase.view_partner_property_form) и используем универсальные
+       якоря //div[@name='button_box'] и //notebook - Odoo объединяет ВСЕ
+       унаследованные вьюхи в одну перед показом, порядок установки модулей
+       на это не влияет. -->
+  <record id="view_partner_form_vendor_card" model="ir.ui.view">
+    <field name="name">res.partner.form.vendor.card</field>
+    <field name="model">res.partner</field>
+    <field name="inherit_id" ref="base.view_partner_form"/>
+    <field name="arch" type="xml">
+
+      <xpath expr="//div[@name='button_box']" position="inside">
+        <button name="action_view_vendor_requests" type="object" class="oe_stat_button" icon="fa-file-text-o"
+                invisible="supplier_rank == 0"
+                groups="purchase.group_purchase_user,purchase_pdf_import.group_chief_buyer,purchase_pdf_import.group_accountant,purchase_pdf_import.group_observer">
+          <div class="o_stat_info">
+            <span class="o_stat_text">Заявки</span>
+          </div>
+        </button>
+        <button name="action_view_vendor_payments" type="object" class="oe_stat_button" icon="fa-money"
+                invisible="supplier_rank == 0"
+                groups="purchase.group_purchase_user,purchase_pdf_import.group_chief_buyer,purchase_pdf_import.group_accountant,purchase_pdf_import.group_observer">
+          <div class="o_stat_info">
+            <span class="o_stat_text">Платежи</span>
+          </div>
+        </button>
+        <button name="action_view_vendor_debt_orders" type="object" class="oe_stat_button" icon="fa-exclamation-triangle"
+                invisible="supplier_rank == 0 or vendor_debt_total &lt;= 0"
+                groups="purchase.group_purchase_user,purchase_pdf_import.group_chief_buyer,purchase_pdf_import.group_accountant,purchase_pdf_import.group_observer">
+          <field name="vendor_debt_total" widget="statinfo" string="Мы должны"/>
+        </button>
+      </xpath>
+
+      <xpath expr="//notebook" position="inside">
+        <page string="Финансы" name="vendor_finance" invisible="supplier_rank == 0"
+              groups="purchase.group_purchase_user,purchase_pdf_import.group_chief_buyer,purchase_pdf_import.group_accountant,purchase_pdf_import.group_observer">
+          <group>
+            <group string="Деньги">
+              <field name="vendor_invoiced_total" widget="monetary"/>
+              <field name="vendor_paid_total" widget="monetary"/>
+              <field name="vendor_frozen_total" widget="monetary"/>
+              <field name="vendor_debt_total" widget="monetary"/>
+              <field name="vendor_residual_total" widget="monetary"/>
+              <field name="vendor_currency_id" invisible="1"/>
+            </group>
+            <group string="Оборот">
+              <field name="vendor_order_count"/>
+              <field name="vendor_avg_order" widget="monetary"/>
+              <field name="vendor_last_order_date"/>
+              <field name="vendor_missing_docs_count"/>
+              <field name="vendor_turnover_period" widget="monetary"/>
+            </group>
+          </group>
+          <separator string="Заказы этого поставщика"/>
+          <field name="vendor_order_ids" nolabel="1" readonly="1">
+            <list decoration-danger="document_status == 'blocked'">
+              <field name="name"/>
+              <field name="date_order"/>
+              <field name="amount_total"/>
+              <field name="amount_paid"/>
+              <field name="document_status" widget="badge"/>
+            </list>
+          </field>
+        </page>
+
+        <page string="Что покупаем" name="vendor_products" invisible="supplier_rank == 0"
+              groups="purchase.group_purchase_user,purchase_pdf_import.group_chief_buyer,purchase_pdf_import.group_accountant,purchase_pdf_import.group_observer">
+          <button name="action_view_vendor_price_history" type="object" string="История цен"
+                  class="btn-secondary mb-2" icon="fa-line-chart"/>
+          <field name="vendor_supplierinfo_ids" nolabel="1">
+            <list editable="bottom">
+              <field name="product_id"/>
+              <field name="product_code" optional="show"/>
+              <field name="product_name" optional="hide"/>
+              <field name="price"/>
+              <field name="date_start" optional="hide"/>
+              <field name="date_end" optional="hide"/>
+            </list>
+          </field>
+        </page>
+
+        <page string="Надёжность" name="vendor_reliability" invisible="supplier_rank == 0"
+              groups="purchase.group_purchase_user,purchase_pdf_import.group_chief_buyer,purchase_pdf_import.group_accountant,purchase_pdf_import.group_observer">
+          <p class="text-muted">
+            Срыв сроков поставки - по каждому товару, среднее отклонение
+            факт/план. Полная разбивка - в отчёте "Поставщики: срыв сроков"
+            (общее меню отчётов по закупкам).
+          </p>
+          <field name="vendor_data_quality" widget="badge"
+                 decoration-danger="vendor_data_quality == 'critical'"
+                 decoration-warning="vendor_data_quality == 'incomplete'"
+                 decoration-success="vendor_data_quality == 'ok'"/>
+        </page>
+
+        <page string="Реквизиты" name="vendor_requisites" invisible="supplier_rank == 0"
+              groups="purchase.group_purchase_user,purchase_pdf_import.group_chief_buyer,purchase_pdf_import.group_accountant,purchase_pdf_import.group_observer">
+          <group>
+            <field name="vat"/>
+            <field name="kpp"/>
+          </group>
+          <separator string="Банковские счета"/>
+          <field name="bank_ids" nolabel="1">
+            <list editable="bottom">
+              <field name="acc_number"/>
+              <field name="bank_id"/>
+            </list>
+          </field>
+        </page>
+      </xpath>
+    </field>
+  </record>
+</odoo>
