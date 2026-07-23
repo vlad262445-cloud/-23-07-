@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Поиск - общий для всех экранов модуля (п. 6.2 ТЗ: домен у каждого
+       пункта меню свой, вьюхи переиспользуются). -->
+  <record id="view_purchase_finance_search" model="ir.ui.view">
+    <field name="name">purchase.order.finance.search</field>
+    <field name="model">purchase.order</field>
+    <field name="arch" type="xml">
+      <search string="Финансы">
+        <field name="name"/>
+        <field name="partner_id"/>
+        <field name="partner_ref" string="№ счёта"/>
+        <filter string="Срочно и критично" name="filter_priority_urgent"
+                domain="[('payment_priority', 'in', ('1', '2'))]"/>
+        <group expand="0" string="Группировать по">
+          <filter string="Этап" name="group_finance_stage" context="{'group_by': 'finance_stage'}"/>
+          <filter string="Поставщик" name="group_partner" context="{'group_by': 'partner_id'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <!-- Главный экран - kanban по finance_stage (п. 6.2 ТЗ). Бесплатно даёт
+       колонки по этапам, счётчик в заголовке, сворачивание пустых колонок -
+       никакого JS. -->
+  <record id="view_purchase_finance_kanban" model="ir.ui.view">
+    <field name="name">purchase.order.finance.kanban</field>
+    <field name="model">purchase.order</field>
+    <field name="arch" type="xml">
+      <kanban default_group_by="finance_stage" create="false" group_create="false"
+              group_delete="false" group_edit="false">
+        <field name="name"/>
+        <field name="finance_partner_display_name"/>
+        <field name="partner_ref"/>
+        <field name="amount_total"/>
+        <field name="amount_residual_purchase"/>
+        <field name="payment_priority"/>
+        <field name="payment_due_date"/>
+        <field name="finance_stage"/>
+        <field name="currency_id"/>
+        <templates>
+          <t t-name="card">
+            <div t-attf-class="oe_kanban_global_click p-2 {{ ['to_pay_urgent', 'inn_mismatch'].includes(record.finance_stage.raw_value) ? 'border-start border-danger border-3' : '' }}">
+              <div class="d-flex justify-content-between align-items-start">
+                <strong><field name="name"/></strong>
+                <field name="payment_priority" widget="priority"/>
+              </div>
+              <div><field name="finance_partner_display_name"/></div>
+              <div t-if="record.partner_ref.value" class="text-muted">
+                № счёта: <field name="partner_ref"/>
+              </div>
+              <div>
+                <field name="amount_total" widget="monetary"/> ·
+                остаток <field name="amount_residual_purchase" widget="monetary"/>
+              </div>
+              <div t-if="record.payment_due_date.value" class="text-muted">
+                Срок: <field name="payment_due_date"/>
+              </div>
+            </div>
+          </t>
+        </templates>
+      </kanban>
+    </field>
+  </record>
+
+  <!-- Урезанный список для пунктов меню 1-5 (п. 6.2 ТЗ) - только то, что
+       нужно для оплаты. -->
+  <record id="view_purchase_finance_list" model="ir.ui.view">
+    <field name="name">purchase.order.finance.list</field>
+    <field name="model">purchase.order</field>
+    <field name="arch" type="xml">
+      <list string="Финансы" create="false" edit="false" delete="false"
+            default_order="payment_priority desc">
+        <field name="payment_priority" widget="priority" string="Приоритет"/>
+        <field name="name" string="№ закупки"/>
+        <field name="finance_partner_display_name" string="Поставщик"/>
+        <field name="partner_ref" string="№ счёта"/>
+        <field name="amount_total" widget="monetary" string="Сумма" sum="Итого"/>
+        <field name="amount_paid" widget="monetary" string="Оплачено" sum="Итого"/>
+        <field name="amount_residual_purchase" widget="monetary" string="Остаток" sum="Итого"/>
+        <field name="payment_due_date" string="Срок"/>
+        <field name="currency_id" column_invisible="True"/>
+        <button name="action_open_payment_import_wizard" type="object" string="Загрузить платёжку"/>
+      </list>
+    </field>
+  </record>
+
+  <!-- Пункт 6 - "Оплачено за период" (п. 6.2 ТЗ): list + pivot по месяцам.
+       Группировка в pivot по partner_id (стабильное хранимое поле), а не
+       по finance_partner_display_name (не хранится, для group_by не
+       годится) - см. NOTES.md. -->
+  <record id="view_purchase_finance_paid_pivot" model="ir.ui.view">
+    <field name="name">purchase.order.finance.paid.pivot</field>
+    <field name="model">purchase.order</field>
+    <field name="arch" type="xml">
+      <pivot string="Оплачено за период">
+        <field name="partner_id" type="row"/>
+        <field name="date_order" interval="month" type="col"/>
+        <field name="amount_paid" type="measure"/>
+      </pivot>
+    </field>
+  </record>
+
+  <!-- Главный экран -->
+  <record id="action_purchase_finance_main" model="ir.actions.act_window">
+    <field name="name">Финансы</field>
+    <field name="res_model">purchase.order</field>
+    <field name="view_mode">kanban,list,form</field>
+    <field name="search_view_id" ref="view_purchase_finance_search"/>
+    <field name="context">{'search_default_group_finance_stage': 1}</field>
+  </record>
+  <record id="action_purchase_finance_main_kanban_view" model="ir.actions.act_window.view">
+    <field name="sequence">1</field>
+    <field name="view_mode">kanban</field>
+    <field name="view_id" ref="view_purchase_finance_kanban"/>
+    <field name="act_window_id" ref="action_purchase_finance_main"/>
+  </record>
+  <record id="action_purchase_finance_main_list_view" model="ir.actions.act_window.view">
+    <field name="sequence">2</field>
+    <field name="view_mode">list</field>
+    <field name="view_id" ref="view_purchase_finance_list"/>
+    <field name="act_window_id" ref="action_purchase_finance_main"/>
+  </record>
+
+  <!-- 1. Требуется оплата -->
+  <record id="action_purchase_finance_to_pay" model="ir.actions.act_window">
+    <field name="name">Требуется оплата</field>
+    <field name="res_model">purchase.order</field>
+    <field name="view_mode">list,kanban,form</field>
+    <field name="domain">[('finance_stage', '=', 'to_pay')]</field>
+    <field name="search_view_id" ref="view_purchase_finance_search"/>
+  </record>
+  <record id="action_purchase_finance_to_pay_list_view" model="ir.actions.act_window.view">
+    <field name="sequence">1</field>
+    <field name="view_mode">list</field>
+    <field name="view_id" ref="view_purchase_finance_list"/>
+    <field name="act_window_id" ref="action_purchase_finance_to_pay"/>
+  </record>
+  <record id="action_purchase_finance_to_pay_kanban_view" model="ir.actions.act_window.view">
+    <field name="sequence">2</field>
+    <field name="view_mode">kanban</field>
+    <field name="view_id" ref="view_purchase_finance_kanban"/>
+    <field name="act_window_id" ref="action_purchase_finance_to_pay"/>
+  </record>
+
+  <!-- 2. Срочная оплата -->
+  <record id="action_purchase_finance_to_pay_urgent" model="ir.actions.act_window">
+    <field name="name">Срочная оплата</field>
+    <field name="res_model">purchase.order</field>
+    <field name="view_mode">list,kanban,form</field>
+    <field name="domain">[('finance_stage', '=', 'to_pay_urgent')]</field>
+    <field name="search_view_id" ref="view_purchase_finance_search"/>
+  </record>
+  <record id="action_purchase_finance_to_pay_urgent_list_view" model="ir.actions.act_window.view">
+    <field name="sequence">1</field>
+    <field name="view_mode">list</field>
+    <field name="view_id" ref="view_purchase_finance_list"/>
+    <field name="act_window_id" ref="action_purchase_finance_to_pay_urgent"/>
+  </record>
+  <record id="action_purchase_finance_to_pay_urgent_kanban_view" model="ir.actions.act_window.view">
+    <field name="sequence">2</field>
+    <field name="view_mode">kanban</field>
+    <field name="view_id" ref="view_purchase_finance_kanban"/>
+    <field name="act_window_id" ref="action_purchase_finance_to_pay_urgent"/>
+  </record>
+
+  <!-- 3. Требуется доплата -->
+  <record id="action_purchase_finance_to_surcharge" model="ir.actions.act_window">
+    <field name="name">Требуется доплата</field>
+    <field name="res_model">purchase.order</field>
+    <field name="view_mode">list,kanban,form</field>
+    <field name="domain">[('finance_stage', '=', 'to_surcharge')]</field>
+    <field name="search_view_id" ref="view_purchase_finance_search"/>
+  </record>
+  <record id="action_purchase_finance_to_surcharge_list_view" model="ir.actions.act_window.view">
+    <field name="sequence">1</field>
+    <field name="view_mode">list</field>
+    <field name="view_id" ref="view_purchase_finance_list"/>
+    <field name="act_window_id" ref="action_purchase_finance_to_surcharge"/>
+  </record>
+  <record id="action_purchase_finance_to_surcharge_kanban_view" model="ir.actions.act_window.view">
+    <field name="sequence">2</field>
+    <field name="view_mode">kanban</field>
+    <field name="view_id" ref="view_purchase_finance_kanban"/>
+    <field name="act_window_id" ref="action_purchase_finance_to_surcharge"/>
+  </record>
+
+  <!-- 4. Загрузить платёжку -->
+  <record id="action_purchase_finance_to_upload_slip" model="ir.actions.act_window">
+    <field name="name">Загрузить платёжку</field>
+    <field name="res_model">purchase.order</field>
+    <field name="view_mode">list,kanban,form</field>
+    <field name="domain">[('finance_stage', '=', 'to_upload_slip')]</field>
+    <field name="search_view_id" ref="view_purchase_finance_search"/>
+  </record>
+  <record id="action_purchase_finance_to_upload_slip_list_view" model="ir.actions.act_window.view">
+    <field name="sequence">1</field>
+    <field name="view_mode">list</field>
+    <field name="view_id" ref="view_purchase_finance_list"/>
+    <field name="act_window_id" ref="action_purchase_finance_to_upload_slip"/>
+  </record>
+  <record id="action_purchase_finance_to_upload_slip_kanban_view" model="ir.actions.act_window.view">
+    <field name="sequence">2</field>
+    <field name="view_mode">kanban</field>
+    <field name="view_id" ref="view_purchase_finance_kanban"/>
+    <field name="act_window_id" ref="action_purchase_finance_to_upload_slip"/>
+  </record>
+
+  <!-- 5. Сверить ИНН -->
+  <record id="action_purchase_finance_inn_mismatch" model="ir.actions.act_window">
+    <field name="name">Сверить ИНН</field>
+    <field name="res_model">purchase.order</field>
+    <field name="view_mode">list,kanban,form</field>
+    <field name="domain">[('finance_stage', '=', 'inn_mismatch')]</field>
+    <field name="search_view_id" ref="view_purchase_finance_search"/>
+  </record>
+  <record id="action_purchase_finance_inn_mismatch_list_view" model="ir.actions.act_window.view">
+    <field name="sequence">1</field>
+    <field name="view_mode">list</field>
+    <field name="view_id" ref="view_purchase_finance_list"/>
+    <field name="act_window_id" ref="action_purchase_finance_inn_mismatch"/>
+  </record>
+  <record id="action_purchase_finance_inn_mismatch_kanban_view" model="ir.actions.act_window.view">
+    <field name="sequence">2</field>
+    <field name="view_mode">kanban</field>
+    <field name="view_id" ref="view_purchase_finance_kanban"/>
+    <field name="act_window_id" ref="action_purchase_finance_inn_mismatch"/>
+  </record>
+
+  <!-- 6. Оплачено за период -->
+  <record id="action_purchase_finance_paid_period" model="ir.actions.act_window">
+    <field name="name">Оплачено за период</field>
+    <field name="res_model">purchase.order</field>
+    <field name="view_mode">list,pivot,form</field>
+    <field name="domain">[('finance_stage', '=', 'done')]</field>
+    <field name="search_view_id" ref="view_purchase_finance_search"/>
+  </record>
+  <record id="action_purchase_finance_paid_period_list_view" model="ir.actions.act_window.view">
+    <field name="sequence">1</field>
+    <field name="view_mode">list</field>
+    <field name="view_id" ref="view_purchase_finance_list"/>
+    <field name="act_window_id" ref="action_purchase_finance_paid_period"/>
+  </record>
+  <record id="action_purchase_finance_paid_period_pivot_view" model="ir.actions.act_window.view">
+    <field name="sequence">2</field>
+    <field name="view_mode">pivot</field>
+    <field name="view_id" ref="view_purchase_finance_paid_pivot"/>
+    <field name="act_window_id" ref="action_purchase_finance_paid_period"/>
+  </record>
+
+  <!-- Отдельное приложение верхнего уровня (п. 6.2 ТЗ) - "Реестр закупок"
+       никуда не девается, это ДОПОЛНИТЕЛЬНОЕ меню, не замена (п. 6.4). -->
+  <menuitem id="menu_purchase_finance_root" name="Финансы" sequence="15"
+            groups="purchase_pdf_import.group_accountant,purchase.group_purchase_manager"/>
+  <menuitem id="menu_purchase_finance_main" name="Рабочий стол"
+            parent="menu_purchase_finance_root" action="action_purchase_finance_main" sequence="1"/>
+  <menuitem id="menu_purchase_finance_to_pay" name="Требуется оплата"
+            parent="menu_purchase_finance_root" action="action_purchase_finance_to_pay" sequence="10"/>
+  <menuitem id="menu_purchase_finance_to_pay_urgent" name="Срочная оплата"
+            parent="menu_purchase_finance_root" action="action_purchase_finance_to_pay_urgent" sequence="20"/>
+  <menuitem id="menu_purchase_finance_to_surcharge" name="Требуется доплата"
+            parent="menu_purchase_finance_root" action="action_purchase_finance_to_surcharge" sequence="30"/>
+  <menuitem id="menu_purchase_finance_to_upload_slip" name="Загрузить платёжку"
+            parent="menu_purchase_finance_root" action="action_purchase_finance_to_upload_slip" sequence="40"/>
+  <menuitem id="menu_purchase_finance_inn_mismatch" name="Сверить ИНН"
+            parent="menu_purchase_finance_root" action="action_purchase_finance_inn_mismatch" sequence="50"/>
+  <menuitem id="menu_purchase_finance_paid_period" name="Оплачено за период"
+            parent="menu_purchase_finance_root" action="action_purchase_finance_paid_period" sequence="60"/>
+</odoo>
