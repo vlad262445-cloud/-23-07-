@@ -1,0 +1,26 @@
+<odoo>
+  <!-- Сводная страница "в один клик" (п. 7.3 ТЗ, пункт 4) - изначально
+       отложена (см. историю в NOTES.md), но пользователь показал референс
+       (плитки KPI + графики на одном экране) и явно попросил именно это -
+       собрано по образцу РЕАЛЬНОГО файла Odoo (spreadsheet_dashboard_account/
+       data/files/invoicing_dashboard.json), а не с нуля вслепую: та же
+       структура (pivots с PIVOT.VALUE на скрытом листе "Data" под
+       scorecard-плитки, графики типа odoo_pie/odoo_bar/odoo_line читают
+       purchase.finance.report напрямую, без дополнительных pivot). Скрипт,
+       собравший файл - data/files/generate_owner_dashboard.py. -->
+  <record id="spreadsheet_dashboard_group_purchases" model="spreadsheet.dashboard.group">
+    <field name="name">Закупки</field>
+    <field name="sequence">25</field>
+  </record>
+
+  <record id="dashboard_owner" model="spreadsheet.dashboard">
+    <field name="name">Собственник - деньги и риск</field>
+    <field name="spreadsheet_binary_data" type="base64" file="purchase_finance_dashboard/data/files/owner_dashboard.json"/>
+    <field name="main_data_model_ids" eval="[(4, ref('model_purchase_finance_report'))]"/>
+    <field name="dashboard_group_id" ref="spreadsheet_dashboard_group_purchases"/>
+    <field name="group_ids" eval="[(4, ref('group_owner')), (4, ref('group_ceo')),
+                                    (4, ref('purchase_pdf_import.group_chief_buyer'))]"/>
+    <field name="sequence">10</field>
+    <field name="is_published">True</field>
+  </record>
+</odoo>

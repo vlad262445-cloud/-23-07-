@@ -8,7 +8,7 @@
         'Финансист, Закупщик - kanban/graph/pivot поверх стандартных '
         'вьюх Odoo'
     ),
-    'depends': ['purchase_pdf_import', 'purchase_stock'],
+    'depends': ['purchase_pdf_import', 'purchase_stock', 'spreadsheet_dashboard'],
     'data': [
         'security/purchase_finance_dashboard_security.xml',
         'security/ir.model.access.csv',
@@ -16,6 +16,7 @@
         'views/role_dashboards_views.xml',
         'views/res_users_roles_matrix_views.xml',
         'views/dashboard_menus.xml',
+        'data/dashboards.xml',
     ],
     'installable': True,
     'application': False,
