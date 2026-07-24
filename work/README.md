@@ -9,6 +9,8 @@
 
 ## С чего начать
 
+**Работа на своём ПК (Local Agent, без Cloud):** см. [LOCAL_PC_SETUP.md](LOCAL_PC_SETUP.md).
+
 1. **Скачать папку к себе** (с рабочего компьютера):
    ```
    scp -r root@78.17.1.240:/opt/odoo/work ./odoo-work
