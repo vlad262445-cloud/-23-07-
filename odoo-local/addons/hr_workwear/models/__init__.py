@@ -1,4 +1,5 @@
 from . import purchase_request_department
+from . import res_partner
 from . import hr_employee
 from . import hr_workwear_type
 from . import hr_workwear_size

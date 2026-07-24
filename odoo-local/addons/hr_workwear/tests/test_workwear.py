@@ -218,3 +218,31 @@ class TestWorkwearRequirement(WorkwearTestMixin, TransactionCase):
         self.assertEqual(len(request.line_ids), 1)
         self.assertEqual(request.line_ids.product_qty, 3)
         self.assertIn(type_robe.name, request.line_ids.name)
+
+
+@tagged('post_install', '-at_install')
+class TestContactKindClassification(WorkwearTestMixin, TransactionCase):
+    """Установка hr создаёт res.partner (work_contact_id) на каждого
+    hr.employee - штатное поведение Odoo, не отключаем (сломало бы
+    переписку/уведомления сотрудника). contact_kind - только
+    классификация для фильтров/группировки в "Контакты", чтобы не
+    смешивались визуально с поставщиками/клиентами."""
+
+    def test_employee_partner_classified_as_employee_even_if_ranked(self):
+        employee = self._make_employee('Test Contact Kind Employee')
+        partner = employee.work_contact_id
+        self.assertEqual(partner.contact_kind, 'employee')
+        # Приоритет "сотрудник" даже если у контакта вдруг проставлен
+        # supplier_rank - это в первую очередь рабочий контакт, не карточка
+        # поставщика.
+        partner.supplier_rank = 1
+        partner.invalidate_recordset(['contact_kind'])
+        self.assertEqual(partner.contact_kind, 'employee')
+
+    def test_supplier_partner_classified_as_supplier(self):
+        partner = self.env['res.partner'].create({'name': 'Test Contact Kind Vendor', 'supplier_rank': 1})
+        self.assertEqual(partner.contact_kind, 'supplier')
+
+    def test_plain_contact_classified_as_other(self):
+        partner = self.env['res.partner'].create({'name': 'Test Contact Kind Plain'})
+        self.assertEqual(partner.contact_kind, 'other')

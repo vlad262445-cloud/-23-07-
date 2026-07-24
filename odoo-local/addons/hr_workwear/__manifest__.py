@@ -15,6 +15,7 @@
         'data/workwear_size_data.xml',
         'data/ir_cron_data.xml',
         'views/purchase_request_department_views.xml',
+        'views/res_partner_contacts_views.xml',
         'views/hr_employee_views.xml',
         'views/workwear_type_size_views.xml',
         'views/workwear_issue_views.xml',

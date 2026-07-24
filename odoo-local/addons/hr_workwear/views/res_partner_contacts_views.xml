@@ -1,0 +1,31 @@
+<odoo>
+  <!-- Расширяет общий поиск "Контакты" (используется и Контактами, и
+       Поставщиками/Клиентами - те уже фильтруются по supplier_rank/
+       customer_rank отдельно, здесь только ДОБАВЛЯЕМ необязательные
+       фильтры/группировку, ничего не меняя по умолчанию). Цель - дать
+       быстро отделить 66+ рабочих контактов сотрудников (см. NOTES.md)
+       от реальных поставщиков/клиентов в общем списке, без изменения
+       самого механизма их создания. -->
+  <record id="view_res_partner_filter_contact_kind" model="ir.ui.view">
+    <field name="name">res.partner.select.contact.kind</field>
+    <field name="model">res.partner</field>
+    <field name="inherit_id" ref="base.view_res_partner_filter"/>
+    <field name="arch" type="xml">
+      <filter name="type_company" position="after">
+        <separator/>
+        <filter string="Сотрудники (рабочие контакты)" name="hrw_filter_employee"
+                domain="[('contact_kind', '=', 'employee')]"/>
+        <filter string="Поставщики" name="hrw_filter_supplier"
+                domain="[('contact_kind', '=', 'supplier')]"/>
+        <filter string="Клиенты" name="hrw_filter_customer"
+                domain="[('contact_kind', '=', 'customer')]"/>
+        <filter string="Скрыть рабочие контакты сотрудников" name="hrw_filter_hide_employee"
+                domain="[('contact_kind', '!=', 'employee')]"/>
+      </filter>
+      <filter name="salesperson" position="before">
+        <filter string="Тип контакта" name="hrw_group_contact_kind"
+                context="{'group_by': 'contact_kind'}"/>
+      </filter>
+    </field>
+  </record>
+</odoo>
