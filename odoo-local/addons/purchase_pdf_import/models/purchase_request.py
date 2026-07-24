@@ -37,7 +37,7 @@ class PurchaseRequest(models.Model):
         'res.users', string='Заявитель', default=lambda self: self.env.user, tracking=True)
     department_id = fields.Many2one(
         'purchase.request.department', string='Отдел/участок',
-        default=lambda self: self.env.user.department_id)
+        default=lambda self: self.env.user.purchase_department_id)
     desired_date = fields.Date(string='Желательная дата')
     cost_code = fields.Char(
         string='Код затрат',
@@ -362,13 +362,13 @@ class PurchaseRequest(models.Model):
                 or user.has_group('purchase_pdf_import.group_chief_buyer') \
                 or user.has_group('purchase_pdf_import.group_observer'):
             return
-        if not user.department_id:
+        if not user.purchase_department_id:
             return
         for request in self:
-            if request.department_id and request.department_id != user.department_id:
+            if request.department_id and request.department_id != user.purchase_department_id:
                 raise ValidationError(_(
                     'Вы можете подавать заявки только по своему отделу/участку (%s).'
-                ) % user.department_id.name)
+                ) % user.purchase_department_id.name)
 
     @api.constrains('line_ids', 'state')
     def _check_has_lines(self):

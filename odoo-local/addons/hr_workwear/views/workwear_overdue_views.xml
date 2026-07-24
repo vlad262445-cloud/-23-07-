@@ -1,0 +1,29 @@
+<odoo>
+  <!-- "Просрочено" (п. 10.7 ТЗ, экран 3) - рабочий экран кладовщика.
+       Фильтрация по workwear_overdue_count работает через search= (см.
+       NOTES.md), сортировка по величине просрочки - нет (тот же
+       принятый размен, что и в модуле 8 для денежных полей), сортируем
+       по ближайшей дате выдачи как практичную замену. -->
+  <record id="view_hr_workwear_overdue_list" model="ir.ui.view">
+    <field name="name">hr.employee.workwear.overdue.list</field>
+    <field name="model">hr.employee</field>
+    <field name="arch" type="xml">
+      <list string="Просрочено" default_order="workwear_next_due_date">
+        <field name="name"/>
+        <field name="department_id"/>
+        <field name="job_title"/>
+        <field name="workwear_overdue_count"/>
+        <field name="workwear_next_due_date"/>
+        <field name="workwear_last_issue_date"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_hr_workwear_overdue" model="ir.actions.act_window">
+    <field name="name">Просрочено</field>
+    <field name="res_model">hr.employee</field>
+    <field name="view_mode">list,form</field>
+    <field name="view_id" ref="view_hr_workwear_overdue_list"/>
+    <field name="domain">[('workwear_overdue_count', '&gt;', 0)]</field>
+  </record>
+</odoo>

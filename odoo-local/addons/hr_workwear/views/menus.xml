@@ -1,0 +1,35 @@
+<odoo>
+  <!-- Отдельное приложение верхнего уровня "Спецодежда" (п. 10.7 ТЗ) - вне
+       очереди остальных модулей, ни от чего не зависит (п. 11.1 ТЗ). Без
+       ограничения по группам на корне - обычный сотрудник тоже должен
+       попасть сюда, чтобы увидеть свою карточку/выдачи (п. 10.9 ТЗ),
+       дальше видимость каждого пункта и содержимое ограничивает ir.rule/
+       access rights. -->
+  <menuitem id="menu_hr_workwear_root" name="Спецодежда" sequence="60"/>
+
+  <menuitem id="menu_hr_workwear_employees" name="Личный состав"
+            parent="menu_hr_workwear_root" action="action_hr_workwear_employee_list" sequence="10"/>
+  <menuitem id="menu_hr_workwear_issues" name="Выдачи"
+            parent="menu_hr_workwear_root" action="action_hr_workwear_issue" sequence="20"/>
+  <menuitem id="menu_hr_workwear_overdue" name="Просрочено"
+            parent="menu_hr_workwear_root" action="action_hr_workwear_overdue" sequence="30"
+            groups="hr_workwear.group_workwear_manager,purchase_pdf_import.group_warehouse_keeper,purchase.group_purchase_manager,purchase_pdf_import.group_observer"/>
+  <menuitem id="menu_hr_workwear_requirement" name="Потребность"
+            parent="menu_hr_workwear_root" action="action_hr_workwear_requirement" sequence="40"
+            groups="hr_workwear.group_workwear_manager,purchase_pdf_import.group_warehouse_keeper,purchase.group_purchase_manager,purchase_pdf_import.group_observer"/>
+  <menuitem id="menu_hr_workwear_consumption" name="Расход"
+            parent="menu_hr_workwear_root" action="action_hr_workwear_issue_line_consumption" sequence="50"
+            groups="hr_workwear.group_workwear_manager,purchase_pdf_import.group_warehouse_keeper,purchase.group_purchase_manager,purchase_pdf_import.group_observer"/>
+
+  <menuitem id="menu_hr_workwear_settings" name="Настройки"
+            parent="menu_hr_workwear_root" sequence="90"
+            groups="hr_workwear.group_workwear_manager,purchase.group_purchase_manager"/>
+  <menuitem id="menu_hr_workwear_settings_type" name="Типы СИЗ"
+            parent="menu_hr_workwear_settings" action="action_hr_workwear_type" sequence="10"/>
+  <menuitem id="menu_hr_workwear_settings_size" name="Размеры"
+            parent="menu_hr_workwear_settings" action="action_hr_workwear_size" sequence="20"/>
+  <menuitem id="menu_hr_workwear_settings_norm" name="Нормы выдачи"
+            parent="menu_hr_workwear_settings" action="action_hr_workwear_norm" sequence="30"/>
+  <menuitem id="menu_hr_workwear_settings_department_mapping" name="Сопоставление отделов"
+            parent="menu_hr_workwear_settings" action="action_purchase_request_department_mapping" sequence="40"/>
+</odoo>

@@ -1,0 +1,44 @@
+<odoo>
+  <template id="report_workwear_employee_card">
+    <t t-call="web.html_container">
+      <t t-foreach="docs" t-as="employee">
+        <t t-call="web.external_layout">
+          <div class="page">
+            <h2>Личная карточка учёта выдачи СИЗ</h2>
+            <table class="table table-sm">
+              <tr><td>ФИО</td><td><span t-field="employee.name"/></td></tr>
+              <tr><td>Табельный номер</td><td><span t-field="employee.personnel_number"/></td></tr>
+              <tr><td>Подразделение</td><td><span t-field="employee.department_id.name"/></td></tr>
+              <tr><td>Должность</td><td><span t-field="employee.job_title"/></td></tr>
+              <tr><td>Дата приёма</td><td><span t-field="employee.hire_date"/></td></tr>
+            </table>
+            <table class="table table-bordered table-sm">
+              <thead>
+                <tr>
+                  <th>Что</th>
+                  <th>Когда</th>
+                  <th>Размер</th>
+                  <th>Срок носки</th>
+                  <th>Истекает</th>
+                  <th>Подпись</th>
+                </tr>
+              </thead>
+              <tbody>
+                <t t-foreach="employee.workwear_issue_ids.mapped('line_ids').sorted('issue_date')" t-as="line">
+                  <tr>
+                    <td><span t-field="line.type_id.name"/></td>
+                    <td><span t-field="line.issue_date"/></td>
+                    <td><span t-field="line.size_id.name"/></td>
+                    <td><span t-field="line.wear_period_months"/> мес.</td>
+                    <td><span t-field="line.expiry_date"/></td>
+                    <td/>
+                  </tr>
+                </t>
+              </tbody>
+            </table>
+          </div>
+        </t>
+      </t>
+    </t>
+  </template>
+</odoo>

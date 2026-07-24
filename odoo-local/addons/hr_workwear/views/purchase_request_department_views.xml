@@ -1,0 +1,28 @@
+<odoo>
+  <!-- У purchase.request.department раньше не было своих вьюх (модель
+       использовалась только как Many2one-селектор) - для заполнения
+       сопоставления со справочником Б (п. 10.2 ТЗ) нужен минимальный
+       список/форма, отдельно ничего в реестре закупок не меняем. -->
+  <record id="view_purchase_request_department_list" model="ir.ui.view">
+    <field name="name">purchase.request.department.workwear.list</field>
+    <field name="model">purchase.request.department</field>
+    <field name="arch" type="xml">
+      <list string="Отделы закупок" editable="bottom">
+        <field name="name"/>
+        <field name="hr_department_id"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_purchase_request_department_mapping" model="ir.actions.act_window">
+    <field name="name">Сопоставление отделов</field>
+    <field name="res_model">purchase.request.department</field>
+    <field name="view_mode">list</field>
+    <field name="view_id" ref="view_purchase_request_department_list"/>
+    <field name="help" type="html">
+      <p>Свяжите каждый отдел закупок (слева) с подразделением из личного
+      состава (справа) - там, где соответствие есть. Пустое сопоставление -
+      нормальное состояние, модуль работает и без него (п. 10.2 ТЗ).</p>
+    </field>
+  </record>
+</odoo>

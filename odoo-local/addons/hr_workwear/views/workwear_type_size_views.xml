@@ -1,0 +1,39 @@
+<odoo>
+  <record id="view_hr_workwear_type_list" model="ir.ui.view">
+    <field name="name">hr.workwear.type.list</field>
+    <field name="model">hr.workwear.type</field>
+    <field name="arch" type="xml">
+      <list string="Типы СИЗ" editable="bottom">
+        <field name="name"/>
+        <field name="size_scale"/>
+        <field name="product_id"/>
+        <field name="wear_period_months"/>
+        <field name="active" column_invisible="1"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_hr_workwear_type" model="ir.actions.act_window">
+    <field name="name">Типы СИЗ</field>
+    <field name="res_model">hr.workwear.type</field>
+    <field name="view_mode">list</field>
+  </record>
+
+  <record id="view_hr_workwear_size_list" model="ir.ui.view">
+    <field name="name">hr.workwear.size.list</field>
+    <field name="model">hr.workwear.size</field>
+    <field name="arch" type="xml">
+      <list string="Размеры" editable="bottom">
+        <field name="scale"/>
+        <field name="name"/>
+        <field name="sequence" widget="handle"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_hr_workwear_size" model="ir.actions.act_window">
+    <field name="name">Размеры</field>
+    <field name="res_model">hr.workwear.size</field>
+    <field name="view_mode">list</field>
+  </record>
+</odoo>

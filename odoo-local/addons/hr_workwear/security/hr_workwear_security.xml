@@ -1,0 +1,83 @@
+<odoo>
+  <record id="group_workwear_manager" model="res.groups">
+    <field name="name">Ответственный за спецодежду</field>
+    <field name="category_id" ref="base.module_category_human_resources"/>
+    <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    <field name="comment">Чтение личного состава, выдачи, размеры и нормы - на практике
+      кладовщик (п. 10.9 ТЗ).</field>
+  </record>
+
+  <!-- hr.employee: ПДн (личные телефоны/почта 64 человек, п. 10.3/10.9
+       ТЗ) - обычный сотрудник видит ТОЛЬКО свою карточку, а не весь
+       справочник, как в штатном hr (см. NOTES.md - это осознанное
+       ужесточение стандартного поведения Odoo). Правило hr.
+       hr_employee_comp_rule (штатное, без groups - глобальное) продолжает
+       действовать наравне с этими - см. разбор в NOTES.md. -->
+  <record id="hr_employee_rule_own" model="ir.rule">
+    <field name="name">Спецодежда: сотрудник видит только свою карточку</field>
+    <field name="model_id" ref="hr.model_hr_employee"/>
+    <field name="domain_force">[('user_id', '=', user.id)]</field>
+    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+  </record>
+
+  <record id="hr_employee_rule_managers_all" model="ir.rule">
+    <field name="name">Спецодежда: ответственные видят всех сотрудников</field>
+    <field name="model_id" ref="hr.model_hr_employee"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_workwear_manager')),
+                                (4, ref('purchase_pdf_import.group_warehouse_keeper')),
+                                (4, ref('purchase.group_purchase_manager')),
+                                (4, ref('purchase_pdf_import.group_observer'))]"/>
+  </record>
+
+  <record id="hr_workwear_issue_rule_own" model="ir.rule">
+    <field name="name">Спецодежда: сотрудник видит только свои выдачи</field>
+    <field name="model_id" ref="model_hr_workwear_issue"/>
+    <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+  </record>
+
+  <record id="hr_workwear_issue_rule_managers_all" model="ir.rule">
+    <field name="name">Спецодежда: ответственные видят все выдачи</field>
+    <field name="model_id" ref="model_hr_workwear_issue"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_workwear_manager')),
+                                (4, ref('purchase_pdf_import.group_warehouse_keeper')),
+                                (4, ref('purchase.group_purchase_manager')),
+                                (4, ref('purchase_pdf_import.group_observer'))]"/>
+  </record>
+
+  <record id="hr_workwear_issue_line_rule_own" model="ir.rule">
+    <field name="name">Спецодежда: сотрудник видит только свои строки выдачи</field>
+    <field name="model_id" ref="model_hr_workwear_issue_line"/>
+    <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+  </record>
+
+  <record id="hr_workwear_issue_line_rule_managers_all" model="ir.rule">
+    <field name="name">Спецодежда: ответственные видят все строки выдачи</field>
+    <field name="model_id" ref="model_hr_workwear_issue_line"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_workwear_manager')),
+                                (4, ref('purchase_pdf_import.group_warehouse_keeper')),
+                                (4, ref('purchase.group_purchase_manager')),
+                                (4, ref('purchase_pdf_import.group_observer'))]"/>
+  </record>
+
+  <record id="hr_employee_workwear_size_rule_own" model="ir.rule">
+    <field name="name">Спецодежда: сотрудник видит только свои размеры</field>
+    <field name="model_id" ref="model_hr_employee_workwear_size"/>
+    <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+    <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+  </record>
+
+  <record id="hr_employee_workwear_size_rule_managers_all" model="ir.rule">
+    <field name="name">Спецодежда: ответственные видят все размеры</field>
+    <field name="model_id" ref="model_hr_employee_workwear_size"/>
+    <field name="domain_force">[(1, '=', 1)]</field>
+    <field name="groups" eval="[(4, ref('group_workwear_manager')),
+                                (4, ref('purchase_pdf_import.group_warehouse_keeper')),
+                                (4, ref('purchase.group_purchase_manager')),
+                                (4, ref('purchase_pdf_import.group_observer'))]"/>
+  </record>
+</odoo>

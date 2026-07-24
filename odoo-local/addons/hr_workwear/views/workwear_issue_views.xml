@@ -1,0 +1,82 @@
+<odoo>
+  <record id="view_hr_workwear_issue_form" model="ir.ui.view">
+    <field name="name">hr.workwear.issue.form</field>
+    <field name="model">hr.workwear.issue</field>
+    <field name="arch" type="xml">
+      <form string="Выдача спецодежды">
+        <header>
+          <button name="action_issue" string="Подтвердить выдачу" type="object"
+                  class="oe_highlight" invisible="state != 'draft'"/>
+          <button name="action_create_picking" string="Списать со склада" type="object"
+                  invisible="state == 'draft' or picking_id"/>
+          <field name="state" widget="statusbar" statusbar_visible="draft,issued,returned"/>
+        </header>
+        <sheet>
+          <div class="oe_title">
+            <h1><field name="name" readonly="1"/></h1>
+          </div>
+          <group>
+            <group>
+              <field name="employee_id"/>
+              <field name="issue_date"/>
+            </group>
+            <group>
+              <field name="issued_by"/>
+              <field name="picking_id" readonly="1"/>
+            </group>
+          </group>
+          <field name="line_ids">
+            <list editable="bottom">
+              <field name="type_id"/>
+              <field name="type_size_scale" column_invisible="1"/>
+              <field name="size_id" domain="[('scale', '=', type_size_scale)]"/>
+              <field name="product_id"/>
+              <field name="quantity"/>
+              <field name="wear_period_months"/>
+              <field name="expiry_date" readonly="1"/>
+              <field name="is_returned"/>
+              <field name="return_date" invisible="not is_returned"/>
+              <field name="condition" invisible="not is_returned"/>
+            </list>
+          </field>
+          <field name="note" placeholder="Комментарий"/>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="view_hr_workwear_issue_list" model="ir.ui.view">
+    <field name="name">hr.workwear.issue.list</field>
+    <field name="model">hr.workwear.issue</field>
+    <field name="arch" type="xml">
+      <list string="Выдачи спецодежды">
+        <field name="name"/>
+        <field name="employee_id"/>
+        <field name="issue_date"/>
+        <field name="state"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_hr_workwear_issue_search" model="ir.ui.view">
+    <field name="name">hr.workwear.issue.search</field>
+    <field name="model">hr.workwear.issue</field>
+    <field name="arch" type="xml">
+      <search string="Выдачи спецодежды">
+        <field name="employee_id"/>
+        <field name="line_ids" string="Тип" filter_domain="[('line_ids.type_id.name', 'ilike', self)]"/>
+        <filter string="Период" name="filter_period" date="issue_date"/>
+        <separator/>
+        <filter string="Отдел" name="group_department" context="{'group_by': 'department_id'}"/>
+        <filter string="Статус" name="group_state" context="{'group_by': 'state'}"/>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_hr_workwear_issue" model="ir.actions.act_window">
+    <field name="name">Выдачи</field>
+    <field name="res_model">hr.workwear.issue</field>
+    <field name="view_mode">list,form</field>
+    <field name="search_view_id" ref="view_hr_workwear_issue_search"/>
+  </record>
+</odoo>

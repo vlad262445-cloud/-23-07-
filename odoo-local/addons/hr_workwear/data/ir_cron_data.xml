@@ -1,0 +1,23 @@
+<odoo>
+  <record id="seq_hr_workwear_issue" model="ir.sequence">
+    <field name="name">Выдача спецодежды</field>
+    <field name="code">hr.workwear.issue</field>
+    <field name="prefix">СИЗ</field>
+    <field name="padding">5</field>
+    <field name="company_id" eval="False"/>
+  </record>
+
+  <!-- Раз в сутки (п. 10.6 ТЗ): пересчитывает "Потребность" и ставит
+       активность кладовщику по просроченным позициям - тот же механизм
+       activity_schedule, что уже используется в purchase_pdf_import для
+       согласований и платёжек, не изобретаем своё уведомление. -->
+  <record id="ir_cron_check_workwear_overdue" model="ir.cron">
+    <field name="name">Проверка сроков спецодежды</field>
+    <field name="model_id" ref="model_hr_employee"/>
+    <field name="state">code</field>
+    <field name="code">model._cron_check_workwear_overdue()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="active">True</field>
+  </record>
+</odoo>

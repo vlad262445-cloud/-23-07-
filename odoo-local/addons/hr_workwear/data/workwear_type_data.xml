@@ -1,0 +1,50 @@
+<odoo noupdate="1">
+  <!-- Стартовый набор типов СИЗ (п. 10.4 ТЗ) - халат/комбинезон/футболка/
+       кепка/куртка из постановки заказчика + обувь/перчатки/очки как
+       очевидно недостающие. product_id намеренно не заполнен - в каталоге
+       (87 позиций) не нашлось ни одного товара-спецодежды (проверено
+       поиском по названию перед написанием этого файла) - заказчик
+       свяжет вручную, когда заведёт номенклатуру. wear_period_months -
+       типовые ориентиры по отрасли, не жёсткая норма - редактируются в
+       интерфейсе, реальные нормы выдачи задаются в hr.workwear.norm. -->
+  <record id="workwear_type_robe" model="hr.workwear.type">
+    <field name="name">Халат</field>
+    <field name="size_scale">alpha</field>
+    <field name="wear_period_months">12</field>
+  </record>
+  <record id="workwear_type_overalls" model="hr.workwear.type">
+    <field name="name">Комбинезон</field>
+    <field name="size_scale">numeric</field>
+    <field name="wear_period_months">12</field>
+  </record>
+  <record id="workwear_type_tshirt" model="hr.workwear.type">
+    <field name="name">Футболка</field>
+    <field name="size_scale">alpha</field>
+    <field name="wear_period_months">6</field>
+  </record>
+  <record id="workwear_type_cap" model="hr.workwear.type">
+    <field name="name">Кепка</field>
+    <field name="size_scale">head</field>
+    <field name="wear_period_months">12</field>
+  </record>
+  <record id="workwear_type_jacket" model="hr.workwear.type">
+    <field name="name">Куртка</field>
+    <field name="size_scale">numeric</field>
+    <field name="wear_period_months">24</field>
+  </record>
+  <record id="workwear_type_boots" model="hr.workwear.type">
+    <field name="name">Ботинки</field>
+    <field name="size_scale">shoe</field>
+    <field name="wear_period_months">12</field>
+  </record>
+  <record id="workwear_type_gloves" model="hr.workwear.type">
+    <field name="name">Перчатки</field>
+    <field name="size_scale">alpha</field>
+    <field name="wear_period_months">2</field>
+  </record>
+  <record id="workwear_type_goggles" model="hr.workwear.type">
+    <field name="name">Очки защитные</field>
+    <field name="size_scale">none</field>
+    <field name="wear_period_months">12</field>
+  </record>
+</odoo>

@@ -1,0 +1,49 @@
+<odoo noupdate="1">
+  <!-- Справочник Б (п. 10.2 ТЗ) - "по участкам", из реестра личного состава.
+       Отдельный от purchase.request.department (справочник А, "по видам
+       работ") - решение "два справочника + сопоставление", подтверждено
+       заказчиком 22.07.2026. Имена - буквально из data/personnel_roster.csv,
+       уже с внесёнными правками (Мицуков/Кустанович/Наточисел/Никонов). -->
+  <record id="hr_department_production" model="hr.department">
+    <field name="name">Производство</field>
+  </record>
+  <record id="hr_department_assembly" model="hr.department">
+    <field name="name">Сборка</field>
+  </record>
+  <record id="hr_department_lathe_cnc" model="hr.department">
+    <field name="name">Токарные ЧПУ</field>
+  </record>
+  <record id="hr_department_mill_cnc" model="hr.department">
+    <field name="name">Фрезерные ЧПУ</field>
+  </record>
+  <record id="hr_department_lathe" model="hr.department">
+    <field name="name">Токарные</field>
+  </record>
+  <record id="hr_department_management" model="hr.department">
+    <field name="name">Управление</field>
+  </record>
+  <record id="hr_department_engineering" model="hr.department">
+    <field name="name">Инженерный отдел</field>
+  </record>
+  <record id="hr_department_workshop" model="hr.department">
+    <field name="name">Мастерская</field>
+  </record>
+  <record id="hr_department_qc" model="hr.department">
+    <field name="name">ОТК</field>
+  </record>
+  <record id="hr_department_shop" model="hr.department">
+    <field name="name">Магазин</field>
+  </record>
+  <record id="hr_department_reception" model="hr.department">
+    <field name="name">Ресепшн</field>
+  </record>
+  <record id="hr_department_tool_storage" model="hr.department">
+    <field name="name">Инстр. Кладовая</field>
+  </record>
+  <record id="hr_department_kho" model="hr.department">
+    <field name="name">КХО</field>
+  </record>
+  <record id="hr_department_safety" model="hr.department">
+    <field name="name">Охрана труда</field>
+  </record>
+</odoo>

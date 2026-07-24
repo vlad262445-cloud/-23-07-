@@ -1,0 +1,99 @@
+<odoo>
+  <!-- Карточка сотрудника (форма hr.employee, п. 10.4/10.7 ТЗ) - добавляем
+       смарт-кнопку "Просрочено" и вкладку "Спецодежда" в уже существующую
+       форму, не заводим свою (та же логика, что и у карточки поставщика в
+       purchase_vendor_card). -->
+  <record id="view_employee_form_workwear" model="ir.ui.view">
+    <field name="name">hr.employee.form.workwear</field>
+    <field name="model">hr.employee</field>
+    <field name="inherit_id" ref="hr.view_employee_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//div[@name='button_box']" position="inside">
+        <button name="action_view_workwear_issues" type="object" class="oe_stat_button" icon="fa-shirtsinbulk"
+                invisible="workwear_not_required">
+          <field name="workwear_overdue_count" widget="statinfo" string="Просрочено"/>
+        </button>
+      </xpath>
+      <xpath expr="//notebook" position="inside">
+        <page string="Спецодежда" name="workwear" invisible="workwear_not_required">
+          <group>
+            <group>
+              <field name="personnel_number"/>
+              <field name="hire_date"/>
+            </group>
+            <group>
+              <field name="workwear_not_required"/>
+              <field name="workwear_last_issue_date"/>
+              <field name="workwear_next_due_date"/>
+            </group>
+          </group>
+          <separator string="Размеры"/>
+          <field name="workwear_size_ids">
+            <list editable="bottom">
+              <field name="type_id"/>
+              <field name="type_size_scale" column_invisible="1"/>
+              <field name="size_id" domain="[('scale', '=', type_size_scale)]"/>
+              <field name="note"/>
+            </list>
+          </field>
+          <separator string="История выдач"/>
+          <field name="workwear_issue_ids" readonly="1">
+            <list>
+              <field name="name"/>
+              <field name="issue_date"/>
+              <field name="state"/>
+            </list>
+          </field>
+        </page>
+      </xpath>
+    </field>
+  </record>
+
+  <!-- Отдельный, целевой под спецодежду список "Личный состав" (п. 10.7
+       ТЗ, экран 1) - штатный список сотрудников (hr.view_employee_tree)
+       не трогаем, у него другое назначение (кадровый учёт). -->
+  <record id="view_hr_workwear_employee_list" model="ir.ui.view">
+    <field name="name">hr.employee.workwear.list</field>
+    <field name="model">hr.employee</field>
+    <field name="arch" type="xml">
+      <list string="Личный состав">
+        <field name="name"/>
+        <field name="personnel_number"/>
+        <field name="department_id"/>
+        <field name="job_title"/>
+        <field name="workwear_size_robe" optional="show"/>
+        <field name="workwear_size_overalls" optional="show"/>
+        <field name="workwear_size_tshirt" optional="show"/>
+        <field name="workwear_size_cap" optional="hide"/>
+        <field name="workwear_size_jacket" optional="hide"/>
+        <field name="workwear_last_issue_date"/>
+        <field name="workwear_overdue_count" decoration-danger="workwear_overdue_count &gt; 0"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_hr_workwear_employee_search" model="ir.ui.view">
+    <field name="name">hr.employee.workwear.search</field>
+    <field name="model">hr.employee</field>
+    <field name="arch" type="xml">
+      <search string="Личный состав">
+        <field name="name"/>
+        <field name="department_id"/>
+        <field name="job_id"/>
+        <filter string="Требуется спецодежда" name="filter_required"
+                domain="[('workwear_not_required', '=', False)]"/>
+        <separator/>
+        <filter string="Отдел" name="group_department" context="{'group_by': 'department_id'}"/>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_hr_workwear_employee_list" model="ir.actions.act_window">
+    <field name="name">Личный состав</field>
+    <field name="res_model">hr.employee</field>
+    <field name="view_mode">list,form</field>
+    <field name="view_id" ref="view_hr_workwear_employee_list"/>
+    <field name="search_view_id" ref="view_hr_workwear_employee_search"/>
+    <field name="context">{'search_default_filter_required': 1}</field>
+  </record>
+</odoo>

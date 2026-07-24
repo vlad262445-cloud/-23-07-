@@ -6,7 +6,7 @@
     <field name="arch" type="xml">
       <page name="preferences" position="inside">
         <group string="Заявки на закупку">
-          <field name="department_id"
+          <field name="purchase_department_id"
                  help="Если указан - обычный сотрудник (без роли Закупщика/Главного
                        закупщика) сможет подавать заявки только по этому отделу."/>
         </group>

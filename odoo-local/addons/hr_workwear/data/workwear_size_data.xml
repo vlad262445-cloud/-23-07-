@@ -1,0 +1,133 @@
+<odoo noupdate="1">
+  <!-- Справочник значений размеров (п. 10.4 ТЗ) - не свободный текст,
+       иначе в базе появятся "M"/"м"/"Эм" и "48-50" как разные размеры
+       (та же беда, от которой модуль 8 защищает поставщиков). Один
+       набор на каждую шкалу (size_scale), домен на hr.employee.workwear.
+       size/строке выдачи фильтрует по типу. Шкала "none" (безразмерное)
+       намеренно без записей - для неё size_id остаётся необязательным. -->
+
+  <!-- alpha: халат, футболка, перчатки -->
+  <record id="workwear_size_alpha_xs" model="hr.workwear.size">
+    <field name="name">XS</field><field name="scale">alpha</field><field name="sequence">10</field>
+  </record>
+  <record id="workwear_size_alpha_s" model="hr.workwear.size">
+    <field name="name">S</field><field name="scale">alpha</field><field name="sequence">20</field>
+  </record>
+  <record id="workwear_size_alpha_m" model="hr.workwear.size">
+    <field name="name">M</field><field name="scale">alpha</field><field name="sequence">30</field>
+  </record>
+  <record id="workwear_size_alpha_l" model="hr.workwear.size">
+    <field name="name">L</field><field name="scale">alpha</field><field name="sequence">40</field>
+  </record>
+  <record id="workwear_size_alpha_xl" model="hr.workwear.size">
+    <field name="name">XL</field><field name="scale">alpha</field><field name="sequence">50</field>
+  </record>
+  <record id="workwear_size_alpha_xxl" model="hr.workwear.size">
+    <field name="name">XXL</field><field name="scale">alpha</field><field name="sequence">60</field>
+  </record>
+
+  <!-- numeric: комбинезон, куртка -->
+  <record id="workwear_size_numeric_44" model="hr.workwear.size">
+    <field name="name">44</field><field name="scale">numeric</field><field name="sequence">10</field>
+  </record>
+  <record id="workwear_size_numeric_46" model="hr.workwear.size">
+    <field name="name">46</field><field name="scale">numeric</field><field name="sequence">20</field>
+  </record>
+  <record id="workwear_size_numeric_48" model="hr.workwear.size">
+    <field name="name">48</field><field name="scale">numeric</field><field name="sequence">30</field>
+  </record>
+  <record id="workwear_size_numeric_50" model="hr.workwear.size">
+    <field name="name">50</field><field name="scale">numeric</field><field name="sequence">40</field>
+  </record>
+  <record id="workwear_size_numeric_52" model="hr.workwear.size">
+    <field name="name">52</field><field name="scale">numeric</field><field name="sequence">50</field>
+  </record>
+  <record id="workwear_size_numeric_54" model="hr.workwear.size">
+    <field name="name">54</field><field name="scale">numeric</field><field name="sequence">60</field>
+  </record>
+  <record id="workwear_size_numeric_56" model="hr.workwear.size">
+    <field name="name">56</field><field name="scale">numeric</field><field name="sequence">70</field>
+  </record>
+  <record id="workwear_size_numeric_58" model="hr.workwear.size">
+    <field name="name">58</field><field name="scale">numeric</field><field name="sequence">80</field>
+  </record>
+  <record id="workwear_size_numeric_60" model="hr.workwear.size">
+    <field name="name">60</field><field name="scale">numeric</field><field name="sequence">90</field>
+  </record>
+  <record id="workwear_size_numeric_62" model="hr.workwear.size">
+    <field name="name">62</field><field name="scale">numeric</field><field name="sequence">100</field>
+  </record>
+  <record id="workwear_size_numeric_64" model="hr.workwear.size">
+    <field name="name">64</field><field name="scale">numeric</field><field name="sequence">110</field>
+  </record>
+
+  <!-- shoe: ботинки -->
+  <record id="workwear_size_shoe_36" model="hr.workwear.size">
+    <field name="name">36</field><field name="scale">shoe</field><field name="sequence">10</field>
+  </record>
+  <record id="workwear_size_shoe_37" model="hr.workwear.size">
+    <field name="name">37</field><field name="scale">shoe</field><field name="sequence">20</field>
+  </record>
+  <record id="workwear_size_shoe_38" model="hr.workwear.size">
+    <field name="name">38</field><field name="scale">shoe</field><field name="sequence">30</field>
+  </record>
+  <record id="workwear_size_shoe_39" model="hr.workwear.size">
+    <field name="name">39</field><field name="scale">shoe</field><field name="sequence">40</field>
+  </record>
+  <record id="workwear_size_shoe_40" model="hr.workwear.size">
+    <field name="name">40</field><field name="scale">shoe</field><field name="sequence">50</field>
+  </record>
+  <record id="workwear_size_shoe_41" model="hr.workwear.size">
+    <field name="name">41</field><field name="scale">shoe</field><field name="sequence">60</field>
+  </record>
+  <record id="workwear_size_shoe_42" model="hr.workwear.size">
+    <field name="name">42</field><field name="scale">shoe</field><field name="sequence">70</field>
+  </record>
+  <record id="workwear_size_shoe_43" model="hr.workwear.size">
+    <field name="name">43</field><field name="scale">shoe</field><field name="sequence">80</field>
+  </record>
+  <record id="workwear_size_shoe_44" model="hr.workwear.size">
+    <field name="name">44</field><field name="scale">shoe</field><field name="sequence">90</field>
+  </record>
+  <record id="workwear_size_shoe_45" model="hr.workwear.size">
+    <field name="name">45</field><field name="scale">shoe</field><field name="sequence">100</field>
+  </record>
+  <record id="workwear_size_shoe_46" model="hr.workwear.size">
+    <field name="name">46</field><field name="scale">shoe</field><field name="sequence">110</field>
+  </record>
+  <record id="workwear_size_shoe_47" model="hr.workwear.size">
+    <field name="name">47</field><field name="scale">shoe</field><field name="sequence">120</field>
+  </record>
+  <record id="workwear_size_shoe_48" model="hr.workwear.size">
+    <field name="name">48</field><field name="scale">shoe</field><field name="sequence">130</field>
+  </record>
+
+  <!-- head: кепка -->
+  <record id="workwear_size_head_54" model="hr.workwear.size">
+    <field name="name">54</field><field name="scale">head</field><field name="sequence">10</field>
+  </record>
+  <record id="workwear_size_head_55" model="hr.workwear.size">
+    <field name="name">55</field><field name="scale">head</field><field name="sequence">20</field>
+  </record>
+  <record id="workwear_size_head_56" model="hr.workwear.size">
+    <field name="name">56</field><field name="scale">head</field><field name="sequence">30</field>
+  </record>
+  <record id="workwear_size_head_57" model="hr.workwear.size">
+    <field name="name">57</field><field name="scale">head</field><field name="sequence">40</field>
+  </record>
+  <record id="workwear_size_head_58" model="hr.workwear.size">
+    <field name="name">58</field><field name="scale">head</field><field name="sequence">50</field>
+  </record>
+  <record id="workwear_size_head_59" model="hr.workwear.size">
+    <field name="name">59</field><field name="scale">head</field><field name="sequence">60</field>
+  </record>
+  <record id="workwear_size_head_60" model="hr.workwear.size">
+    <field name="name">60</field><field name="scale">head</field><field name="sequence">70</field>
+  </record>
+  <record id="workwear_size_head_61" model="hr.workwear.size">
+    <field name="name">61</field><field name="scale">head</field><field name="sequence">80</field>
+  </record>
+  <record id="workwear_size_head_62" model="hr.workwear.size">
+    <field name="name">62</field><field name="scale">head</field><field name="sequence">90</field>
+  </record>
+</odoo>
