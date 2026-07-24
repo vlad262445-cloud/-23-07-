@@ -1,0 +1,16 @@
+---
+description: Odoo 18 закупки + модули ТЗ — контекст для локального агента на ПК
+alwaysApply: true
+---
+
+# Odoo 18 TZ — локальная работа
+
+- Репозиторий: модули в `odoo-local/addons/`, база — `purchase_pdf_import`. Снимок в `work/source/` устаревает; не использовать как эталон кода.
+- ТЗ: `work/TZ_purchase_modules.md` — читать только нужный раздел + `README.md`/`NOTES.md` модуля, не весь файл (~1900 строк).
+- Деньги только из `purchase.order.amount_total` и `purchase.payment.line` — **не** `account.move` / `invoice_status`.
+- «Товар получен» — `stock.picking` incoming done или `_request_state_reached('in_stock')`, не голое `request_state == 'in_stock'`.
+- Новые аддоны **не меняют** файлы `purchase_pdf_import`, только `_inherit` / xpath.
+- Очередь внедрения: п. 11.1 ТЗ (`purchase_vendor_matching` первым).
+- UI реестра: не добавлять лишние `<td>` в ListRenderer — встраивать в существующую ячейку (`purchase_registry_ux/NOTES.md`).
+- Тест: `odoo-bin -u MODULE --test-enable --stop-after-init` или `scripts/run-all-module-tests.sh`.
+- Тестовый сервер: `78.17.1.240`, `/opt/odoo` — SSH с ПК пользователя; Cloud Agent к :22 часто не проходит.
